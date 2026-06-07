@@ -43,6 +43,16 @@ const CONFIG_INICIAL: ConfigNegocio = {
   numMesas: 10,
 }
 
+export const CAJEROS_DEFAULT: Cajero[] = [
+  { id: 'cajero-1', nombre: 'AdminJC', activo: true, creadoEn: NOW },
+  { id: 'cajero-2', nombre: 'Jeffry',  activo: true, creadoEn: NOW },
+  { id: 'cajero-3', nombre: 'Andrea',  activo: true, creadoEn: NOW },
+]
+
+export async function seedCajerosDefault(): Promise<void> {
+  await cajerosRepository.crearBulk(CAJEROS_DEFAULT)
+}
+
 export async function seedFirestoreIfEmpty(): Promise<void> {
   // Productos
   const prodSnap = await getDocs(hCol('productos'))
@@ -59,10 +69,7 @@ export async function seedFirestoreIfEmpty(): Promise<void> {
   // Cajeros
   const cajerosSnap = await getDocs(hCol('cajeros'))
   if (cajerosSnap.empty) {
-    const cajeros: Cajero[] = [
-      { id: 'cajero-1', nombre: 'Administrador', activo: true, creadoEn: NOW },
-    ]
-    await cajerosRepository.crearBulk(cajeros)
+    await seedCajerosDefault()
   }
 
   // Mesas (10 por defecto)
