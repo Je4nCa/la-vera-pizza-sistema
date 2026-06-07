@@ -11,26 +11,35 @@ import { Badge } from '@/components/ui/badge'
 import type { Venta } from '@/types'
 
 export default function Historial() {
-  const ventas = useCollection<Venta>(() => hCol('ventas'))
+  const ventas   = useCollection<Venta>(() => hCol('ventas'))
   const { showToast } = useUIStore()
 
-  const [busqueda, setBusqueda] = useState('')
-  const [filtroFecha, setFiltroFecha] = useState(isoFecha())
+  // cajeros únicos presentes en ventas
+  const cajerosList = useMemo(() => {
+    const map = new Map<string, string>()
+    ;(ventas ?? []).forEach((v) => { if (v.cajeroId) map.set(v.cajeroId, v.cajeroNombre) })
+    return [...map.entries()]
+  }, [ventas])
+
+  const [busqueda, setBusqueda]         = useState('')
+  const [filtroFecha, setFiltroFecha]   = useState(isoFecha())
   const [filtroMetodo, setFiltroMetodo] = useState('')
   const [filtroEstado, setFiltroEstado] = useState('')
-  const [expandida, setExpandida] = useState<string | null>(null)
+  const [filtroCajero, setFiltroCajero] = useState('')
+  const [expandida, setExpandida]       = useState<string | null>(null)
 
   const filtradas = useMemo(() => {
     let list = [...(ventas ?? [])]
     if (filtroFecha) list = list.filter((v) => v.fecha.startsWith(filtroFecha))
     if (filtroMetodo) list = list.filter((v) => v.metodoPago === filtroMetodo)
     if (filtroEstado) list = list.filter((v) => (v.estado ?? 'pagada') === filtroEstado)
+    if (filtroCajero) list = list.filter((v) => v.cajeroId === filtroCajero)
     if (busqueda) {
       const q = busqueda.toLowerCase()
       list = list.filter((v) => v.codigoFactura.toLowerCase().includes(q) || v.cliente.toLowerCase().includes(q))
     }
     return list.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-  }, [ventas, busqueda, filtroFecha, filtroMetodo, filtroEstado])
+  }, [ventas, busqueda, filtroFecha, filtroMetodo, filtroEstado, filtroCajero])
 
   const totalFiltrado = filtradas.filter((v) => v.estado !== 'anulada').reduce((s, v) => s + v.total, 0)
 
@@ -82,6 +91,16 @@ export default function Historial() {
           <option value="pagada">Pagadas</option>
           <option value="anulada">Anuladas</option>
         </select>
+        <select
+          value={filtroCajero}
+          onChange={(e) => setFiltroCajero(e.target.value)}
+          className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E2D24]"
+        >
+          <option value="">Todos los cajeros</option>
+          {cajerosList.map(([id, nombre]) => (
+            <option key={id} value={id}>{nombre}</option>
+          ))}
+        </select>
       </div>
 
       {/* Resumen */}
@@ -107,6 +126,9 @@ export default function Historial() {
                   <div className="font-semibold text-sm truncate">{venta.cliente}</div>
                   <div className="text-[11px] text-muted-foreground">{fmtFecha(venta.fecha)}</div>
                 </div>
+                {venta.cajeroNombre && (
+                  <Badge variant="gris" className="text-[10px]">{venta.cajeroNombre}</Badge>
+                )}
                 {venta.mesa !== null && (
                   <Badge variant="gris" className="text-[10px]">Mesa {venta.mesa}</Badge>
                 )}

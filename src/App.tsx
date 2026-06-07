@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { seedFirestoreIfEmpty } from '@/lib/seedFirestore'
-import Login  from '@/pages/Login'
-import Router from '@/router'
+import Login          from '@/pages/Login'
+import SelectorCajero from '@/pages/SelectorCajero'
+import Router         from '@/router'
+import { useCajeroStore } from '@/store'
 
 const ALLOWED_EMAILS = (import.meta.env.VITE_ALLOWED_EMAILS ?? '')
   .split(',')
@@ -13,6 +15,7 @@ const ALLOWED_EMAILS = (import.meta.env.VITE_ALLOWED_EMAILS ?? '')
 export default function App() {
   const [user,    setUser]    = useState<User | null | undefined>(undefined)
   const [allowed, setAllowed] = useState(false)
+  const cajeroActivo = useCajeroStore((s) => s.cajeroActivo)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -68,6 +71,8 @@ export default function App() {
       </div>
     )
   }
+
+  if (!cajeroActivo) return <SelectorCajero />
 
   return <Router />
 }

@@ -63,6 +63,8 @@ export interface Venta {
   total:         number
   metodoPago:    MetodoPago
   estado:        EstadoVenta
+  cajeroId:      string
+  cajeroNombre:  string
   creadoEn:      string
 }
 
@@ -90,6 +92,14 @@ export interface Mesa {
   ocupada: boolean
   orden:   string | null
   desde:   string | null  // ISO cuando se ocupó
+}
+
+// ─── Cajero ──────────────────────────────────────────────────────────────────
+export interface Cajero {
+  id:        ID
+  nombre:    string
+  activo:    boolean
+  creadoEn:  string
 }
 
 // ─── Config del negocio ──────────────────────────────────────────────────────

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
+import { nanoid } from 'nanoid'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
-import { configRepository, mesasRepository } from '@/repositories'
+import { configRepository, mesasRepository, cajerosRepository } from '@/repositories'
 import { useUIStore } from '@/store'
 import { sinUndefined } from '@/lib/utils'
-import { Save, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Save, RefreshCw, AlertTriangle, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { ConfigNegocio } from '@/types'
+import type { ConfigNegocio, Cajero } from '@/types'
 
 type FormConfig = {
   nombre:     string
@@ -29,12 +30,14 @@ const DEFAULT: FormConfig = {
 }
 
 export default function Configuracion() {
-  const cfgList = useCollection<ConfigNegocio>(() => hCol('config'))
-  const cfg = cfgList?.[0]
+  const cfgList  = useCollection<ConfigNegocio>(() => hCol('config'))
+  const cfg      = cfgList?.[0]
+  const cajeros  = useCollection<Cajero>(() => hCol('cajeros'))
   const { showToast } = useUIStore()
   const [form, setForm] = useState<FormConfig>(DEFAULT)
-  const [loading, setLoading] = useState(false)
-  const [tab, setTab]       = useState<'negocio' | 'sistema' | 'datos'>('negocio')
+  const [loading, setLoading]     = useState(false)
+  const [tab, setTab]             = useState<'negocio' | 'sistema' | 'cajeros' | 'datos'>('negocio')
+  const [nuevoCajero, setNuevoCajero] = useState('')
 
   // Cargar configuración existente
   useEffect(() => {
@@ -108,10 +111,30 @@ export default function Configuracion() {
     }
   }
 
+  async function agregarCajero() {
+    const nombre = nuevoCajero.trim()
+    if (!nombre) return
+    const nuevo: Cajero = { id: nanoid(), nombre, activo: true, creadoEn: new Date().toISOString() }
+    await cajerosRepository.crear(sinUndefined(nuevo) as unknown as Cajero)
+    setNuevoCajero('')
+    showToast(`Cajero "${nombre}" agregado`, 'ok')
+  }
+
+  async function toggleCajero(c: Cajero) {
+    await cajerosRepository.actualizar(c.id, { activo: !c.activo })
+  }
+
+  async function eliminarCajero(c: Cajero) {
+    if (!confirm(`¿Eliminar a ${c.nombre}?`)) return
+    await cajerosRepository.eliminar(c.id)
+    showToast(`Cajero "${c.nombre}" eliminado`, 'warning')
+  }
+
   const TABS = [
-    { key: 'negocio' as const, label: 'Datos del Negocio' },
+    { key: 'negocio' as const, label: 'Negocio' },
     { key: 'sistema' as const, label: 'Sistema POS' },
-    { key: 'datos'   as const, label: 'Gestión de Datos' },
+    { key: 'cajeros' as const, label: 'Cajeros' },
+    { key: 'datos'   as const, label: 'Datos' },
   ]
 
   const fieldCls = 'w-full border border-border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-[#1E2D24]'
@@ -211,6 +234,57 @@ export default function Configuracion() {
           <Button onClick={guardar} disabled={loading} className="w-full">
             <Save size={14}/> {loading ? 'Guardando…' : 'Guardar Configuración'}
           </Button>
+        </div>
+      )}
+
+      {/* Panel Cajeros */}
+      {tab === 'cajeros' && (
+        <div className="bg-white border border-border rounded-xl p-6 space-y-4">
+          <h3 className="font-serif text-lg text-primary">Gestión de Cajeros</h3>
+          <p className="text-xs text-muted-foreground">
+            Los cajeros activos aparecen en la pantalla de selección al iniciar el POS.
+          </p>
+
+          {/* Agregar nuevo */}
+          <div className="flex gap-2">
+            <input
+              value={nuevoCajero}
+              onChange={(e) => setNuevoCajero(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && agregarCajero()}
+              placeholder="Nombre del cajero"
+              className={fieldCls + ' flex-1'}
+            />
+            <Button onClick={agregarCajero} disabled={!nuevoCajero.trim()}>
+              <Plus size={14}/> Agregar
+            </Button>
+          </div>
+
+          {/* Lista */}
+          <div className="divide-y divide-border border border-border rounded-xl overflow-hidden">
+            {(cajeros ?? []).length === 0 ? (
+              <div className="text-center text-muted-foreground py-8 text-sm">
+                No hay cajeros registrados
+              </div>
+            ) : (
+              [...(cajeros ?? [])].sort((a, b) => a.nombre.localeCompare(b.nombre)).map((c) => (
+                <div key={c.id} className="flex items-center gap-3 px-4 py-3 hover:bg-secondary/30 transition-colors">
+                  <div className="flex-1 font-semibold text-sm">{c.nombre}</div>
+                  <span className={`text-[11px] font-semibold ${c.activo ? 'text-green-600' : 'text-muted-foreground'}`}>
+                    {c.activo ? 'Activo' : 'Inactivo'}
+                  </span>
+                  <button onClick={() => toggleCajero(c)} className="text-muted-foreground hover:text-foreground transition-colors">
+                    {c.activo
+                      ? <ToggleRight size={22} className="text-green-500"/>
+                      : <ToggleLeft size={22}/>
+                    }
+                  </button>
+                  <button onClick={() => eliminarCajero(c)} className="text-muted-foreground hover:text-destructive transition-colors">
+                    <Trash2 size={15}/>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
 
