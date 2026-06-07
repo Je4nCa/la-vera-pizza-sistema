@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* La Vera Pizza — Light / Cream theme */
+    --background:         36 33% 95%;   /* #F2ECE3 crema */
+    --foreground:         135 19% 14%;  /* #1E2D24 verde oscuro */
+
+    --card:               0 0% 100%;
+    --card-foreground:    135 19% 14%;
+
+    --popover:            0 0% 100%;
+    --popover-foreground: 135 19% 14%;
+
+    --primary:            135 19% 14%;  /* verde */
+    --primary-foreground: 36 33% 95%;  /* crema */
+
+    --secondary:          36 20% 88%;  /* crema oscura */
+    --secondary-foreground: 135 19% 20%;
+
+    --muted:              36 20% 90%;
+    --muted-foreground:   135 5% 45%;
+
+    --accent:             36 20% 88%;
+    --accent-foreground:  135 19% 14%;
+
+    --destructive:        11 59% 47%;   /* rojo */
+    --destructive-foreground: 0 0% 100%;
+
+    --border:             36 20% 85%;
+    --input:              36 20% 88%;
+    --ring:               135 19% 14%;
+
+    --radius:             0.75rem;
+
+    /* Brand extras */
+    --verde:  135 19% 14%;   /* #1E2D24 */
+    --rojo:   11 59% 47%;    /* #C4432D */
+    --dorado: 33 55% 58%;    /* #D4A35A */
+    --crema:  36 33% 95%;    /* #F2ECE3 */
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3 { @apply font-serif; }
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+
+/* Animación fade-in-up para secciones */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.22s ease; }
