@@ -1,7 +1,7 @@
 import { getDocs } from 'firebase/firestore'
 import { hCol } from './firebase'
-import { productosRepository, mesasRepository, configRepository } from '@/repositories'
-import type { Producto, Mesa, ConfigNegocio } from '@/types'
+import { productosRepository, mesasRepository, configRepository, cajerosRepository } from '@/repositories'
+import type { Producto, Mesa, ConfigNegocio, Cajero } from '@/types'
 
 const P = { p: 3000, m: 4500, g: 9000, xl: 12000 }
 const NOW = new Date().toISOString()
@@ -54,6 +54,15 @@ export async function seedFirestoreIfEmpty(): Promise<void> {
   const cfg = await configRepository.obtenerConfig()
   if (!cfg) {
     await configRepository.guardarConfig(CONFIG_INICIAL)
+  }
+
+  // Cajeros
+  const cajerosSnap = await getDocs(hCol('cajeros'))
+  if (cajerosSnap.empty) {
+    const cajeros: Cajero[] = [
+      { id: 'cajero-1', nombre: 'Administrador', activo: true, creadoEn: NOW },
+    ]
+    await cajerosRepository.crearBulk(cajeros)
   }
 
   // Mesas (10 por defecto)

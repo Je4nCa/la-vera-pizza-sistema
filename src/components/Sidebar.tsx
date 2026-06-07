@@ -1,11 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { useUIStore, useCarritoStore } from '@/store'
+import { useUIStore, useCarritoStore, useCajeroStore } from '@/store'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, ShoppingCart, Grid2x2, ClipboardList,
-  Package, Users, BarChart2, Settings, LogOut,
+  Package, Users, BarChart2, Settings, LogOut, UserCircle2,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -21,9 +21,10 @@ const NAV_ITEMS = [
 
 export default function Sidebar() {
   const { sidebarOpen, setSidebarOpen } = useUIStore()
-  const carritoItems = useCarritoStore((s) => s.items)
-  const totalItems   = carritoItems.reduce((sum, i) => sum + i.qty, 0)
-  const navigate     = useNavigate()
+  const carritoItems  = useCarritoStore((s) => s.items)
+  const totalItems    = carritoItems.reduce((sum, i) => sum + i.qty, 0)
+  const navigate      = useNavigate()
+  const { cajeroActivo, cerrarCajero } = useCajeroStore()
 
   async function handleLogout() {
     await signOut(auth)
@@ -85,7 +86,22 @@ export default function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-white/10">
+        <div className="px-5 py-4 border-t border-white/10 space-y-3">
+          {/* Cajero activo */}
+          {cajeroActivo && (
+            <div className="bg-white/8 rounded-xl px-3 py-2.5">
+              <div className="flex items-center gap-2 mb-1.5">
+                <UserCircle2 size={14} className="text-[#D4A35A] shrink-0" />
+                <span className="text-[#F2ECE3] text-xs font-semibold truncate">{cajeroActivo.nombre}</span>
+              </div>
+              <button
+                onClick={cerrarCajero}
+                className="text-[#F2ECE3]/40 text-[10px] uppercase tracking-wide hover:text-[#D4A35A] transition-colors"
+              >
+                Cambiar cajero
+              </button>
+            </div>
+          )}
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 text-[#F2ECE3]/40 text-[10px] uppercase tracking-wide hover:text-[#F2ECE3]/70 transition-colors w-full"
@@ -93,7 +109,7 @@ export default function Sidebar() {
             <LogOut size={13} />
             Cerrar Sesión
           </button>
-          <div className="text-[#F2ECE3]/25 text-[9px] text-center mt-2">
+          <div className="text-[#F2ECE3]/25 text-[9px] text-center">
             Montevo Studio © | POS v2.0
           </div>
         </div>

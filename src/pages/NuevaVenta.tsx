@@ -3,7 +3,7 @@ import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { fmtColones } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { useCarritoStore, useUIStore, calcularTotales } from '@/store'
+import { useCarritoStore, useUIStore, useCajeroStore, calcularTotales } from '@/store'
 import { ventasRepository, mesasRepository, configRepository } from '@/repositories'
 import { sinUndefined } from '@/lib/utils'
 import { nanoid } from 'nanoid'
@@ -182,6 +182,7 @@ export default function NuevaVenta() {
   } = useCarritoStore()
 
   const { showToast } = useUIStore()
+  const cajeroActivo  = useCajeroStore((s) => s.cajeroActivo)
 
   const [categoriaActiva, setCategoriaActiva] = useState<'Pizzas' | 'Extras'>('Pizzas')
   const [busqueda, setBusqueda] = useState('')
@@ -274,6 +275,8 @@ export default function NuevaVenta() {
         total,
         metodoPago,
         estado:        'pagada',
+        cajeroId:      cajeroActivo?.id      ?? '',
+        cajeroNombre:  cajeroActivo?.nombre  ?? 'Sin cajero',
         creadoEn:      new Date().toISOString(),
       }
 

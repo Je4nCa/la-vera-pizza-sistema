@@ -1,4 +1,5 @@
 export { productosRepository } from './productos.repository'
+export { cajerosRepository }  from './cajeros.repository'
 export { ventasRepository }    from './ventas.repository'
 export { clientesRepository }  from './clientes.repository'
 export { mesasRepository }     from './mesas.repository'

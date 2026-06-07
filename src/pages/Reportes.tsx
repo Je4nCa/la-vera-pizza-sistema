@@ -8,9 +8,16 @@ type Rango = 'hoy' | 'semana' | 'mes' | 'custom'
 
 export default function Reportes() {
   const ventas = useCollection<Venta>(() => hCol('ventas'))
-  const [rango, setRango] = useState<Rango>('mes')
+  const [rango, setRango]             = useState<Rango>('mes')
   const [fechaInicio, setFechaInicio] = useState(isoMes() + '-01')
   const [fechaFin, setFechaFin]       = useState(new Date().toISOString().slice(0, 10))
+  const [filtroCajero, setFiltroCajero] = useState('')
+
+  const cajerosList = useMemo(() => {
+    const map = new Map<string, string>()
+    ;(ventas ?? []).forEach((v) => { if (v.cajeroId) map.set(v.cajeroId, v.cajeroNombre) })
+    return [...map.entries()]
+  }, [ventas])
 
   function rangoFechas() {
     const hoy = new Date()
@@ -31,9 +38,11 @@ export default function Reportes() {
   const filtradas = useMemo(() => {
     return (ventas ?? []).filter((v) => {
       const d = v.fecha.slice(0, 10)
-      return d >= ini && d <= fin && v.estado !== 'anulada'
+      if (d < ini || d > fin || v.estado === 'anulada') return false
+      if (filtroCajero && v.cajeroId !== filtroCajero) return false
+      return true
     })
-  }, [ventas, ini, fin])
+  }, [ventas, ini, fin, filtroCajero])
 
   const stats = useMemo(() => {
     const totalIngresos    = filtradas.reduce((s, v) => s + v.total, 0)
@@ -57,13 +66,22 @@ export default function Reportes() {
       porDia[d] = (porDia[d] ?? 0) + v.total
     })
 
-    // Por categoría (top productos)
+    // Por producto
     const porProducto: Record<string, number> = {}
     filtradas.forEach((v) => v.items.forEach((i) => {
       porProducto[i.nombre] = (porProducto[i.nombre] ?? 0) + i.qty
     }))
 
-    return { totalIngresos, totalIva, totalDescuentos, numVentas, promedio, porMetodo, porDia, porProducto }
+    // Por cajero
+    const porCajero: Record<string, { nombre: string; count: number; total: number }> = {}
+    filtradas.forEach((v) => {
+      const key = v.cajeroId || 'sin-cajero'
+      if (!porCajero[key]) porCajero[key] = { nombre: v.cajeroNombre || 'Sin cajero', count: 0, total: 0 }
+      porCajero[key].count += 1
+      porCajero[key].total += v.total
+    })
+
+    return { totalIngresos, totalIva, totalDescuentos, numVentas, promedio, porMetodo, porDia, porProducto, porCajero }
   }, [filtradas])
 
   const topDias = Object.entries(stats.porDia).sort((a, b) => b[1] - a[1]).slice(0, 7)
@@ -94,6 +112,15 @@ export default function Reportes() {
             <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)}
               className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none" />
           </div>
+        )}
+        {cajerosList.length > 0 && (
+          <select value={filtroCajero} onChange={(e) => setFiltroCajero(e.target.value)}
+            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none ml-auto">
+            <option value="">Todos los cajeros</option>
+            {cajerosList.map(([id, nombre]) => (
+              <option key={id} value={id}>{nombre}</option>
+            ))}
+          </select>
         )}
       </div>
 
@@ -162,6 +189,28 @@ export default function Reportes() {
           )}
         </div>
       </div>
+
+      {/* Por cajero */}
+      {Object.keys(stats.porCajero).length > 0 && (
+        <div className="bg-white border border-border rounded-xl p-5">
+          <h3 className="font-serif text-base text-primary mb-4">Ventas por Cajero</h3>
+          <div className="space-y-3">
+            {Object.entries(stats.porCajero)
+              .sort((a, b) => b[1].total - a[1].total)
+              .map(([, { nombre, count, total }]) => (
+                <div key={nombre}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="font-semibold">{nombre}</span>
+                    <span className="text-muted-foreground text-xs">{count} ventas · <span className="font-bold text-[#C4432D]">{fmtColones(total)}</span></span>
+                  </div>
+                  <div className="bg-secondary rounded-full h-2 overflow-hidden">
+                    <div className="bg-[#1E2D24] h-full rounded-full" style={{ width: `${(total / (stats.totalIngresos || 1)) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* Ventas por día */}
       {topDias.length > 0 && (
