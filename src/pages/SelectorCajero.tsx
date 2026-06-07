@@ -1,17 +1,31 @@
+import { useEffect, useRef } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { useCajeroStore } from '@/store'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import { seedCajerosDefault } from '@/lib/seedFirestore'
 import { LogOut, UserCircle2 } from 'lucide-react'
 import type { Cajero } from '@/types'
 
 export default function SelectorCajero() {
-  const cajeros        = useCollection<Cajero>(() => hCol('cajeros'))
+  const cajeros         = useCollection<Cajero>(() => hCol('cajeros'))
   const setCajeroActivo = useCajeroStore((s) => s.setCajeroActivo)
+  const sembrado        = useRef(false)
 
-  const activos = (cajeros ?? []).filter((c) => c.activo)
+  // Si carga y está vacío, siembra los cajeros por defecto
+  useEffect(() => {
+    if (cajeros !== undefined && cajeros.length === 0 && !sembrado.current) {
+      sembrado.current = true
+      seedCajerosDefault().catch(console.error)
+    }
+  }, [cajeros])
+
+  const activos = (cajeros ?? [])
+    .filter((c) => c.activo)
     .sort((a, b) => a.nombre.localeCompare(b.nombre))
+
+  const cargando = cajeros === undefined
 
   return (
     <div className="min-h-screen bg-[#1E2D24] flex flex-col items-center justify-center px-6">
@@ -21,20 +35,32 @@ export default function SelectorCajero() {
           <div className="text-[#C4432D] text-[11px] font-semibold tracking-[4px] uppercase mb-1">— La —</div>
           <div className="font-serif text-[#F2ECE3] text-6xl font-black leading-none">VERA</div>
           <div className="font-serif text-[#C4432D] text-xl font-bold tracking-[3px] uppercase">PIZZA</div>
-          <div className="text-[#D4A35A] text-xs tracking-[2px] uppercase mt-3">¿Quién atiende hoy?</div>
+          <div className="text-[#D4A35A] text-xs tracking-[2px] uppercase mt-3">
+            {cargando ? 'Un momento…' : '¿Quién atiende hoy?'}
+          </div>
         </div>
 
-        {/* Lista de cajeros */}
-        {cajeros === undefined ? (
-          <div className="text-center text-[#F2ECE3]/40 text-sm">Cargando…</div>
+        {/* Estados */}
+        {cargando ? (
+          /* Skeleton mientras carga */
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="bg-white/5 rounded-2xl p-6 animate-pulse h-[104px]" />
+            ))}
+          </div>
         ) : activos.length === 0 ? (
-          <div className="text-center bg-white/5 rounded-2xl p-8">
-            <div className="text-[#F2ECE3]/50 text-sm">
-              No hay cajeros configurados aún.<br/>
-              Un administrador debe agregarlos en Configuración.
+          /* Vacío — sembrando o sin cajeros */
+          <div className="text-center bg-white/5 rounded-2xl p-8 space-y-3">
+            <div className="text-3xl">⏳</div>
+            <div className="text-[#F2ECE3]/70 text-sm">
+              Creando cajeros por defecto…
+            </div>
+            <div className="text-[#F2ECE3]/30 text-xs">
+              Si esto tarda más de unos segundos, recargá la página.
             </div>
           </div>
         ) : (
+          /* Grid de cajeros */
           <div className="grid grid-cols-2 gap-3">
             {activos.map((cajero) => (
               <button
