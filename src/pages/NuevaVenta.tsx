@@ -169,37 +169,93 @@ function ModalSplit({ total, onClose }: { total: number; onClose: () => void }) 
 }
 
 // ─── Componente principal ────────────────────────────────────────────────────
-// ─── Modal SINPE ──────────────────────────────────────────────────────────────
-function ModalSinpe({ total, sinpeNumero, sinpeNombre, onClose }: {
-  total: number; sinpeNumero: string; sinpeNombre: string; onClose: () => void
+// ─── Modal Confirmar Pago ─────────────────────────────────────────────────────
+function ModalConfirmarPago({ metodoPago, total, sinpeNumero, sinpeNombre, procesando, onConfirmar, onClose }: {
+  metodoPago: MetodoPago
+  total: number
+  sinpeNumero: string
+  sinpeNombre: string
+  procesando: boolean
+  onConfirmar: () => void
+  onClose: () => void
 }) {
+  const iconos:    Record<MetodoPago, string> = { efectivo: '💵', tarjeta: '💳', sinpe: '📱' }
+  const etiquetas: Record<MetodoPago, string> = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', sinpe: 'SINPE Móvil' }
+  const mensajes:  Record<MetodoPago, string> = {
+    efectivo: 'Confirmá que recibiste el efectivo',
+    tarjeta:  'Confirmá que el cobro en tarjeta fue aprobado',
+    sinpe:    'Mostrá el QR al cliente y confirmá cuando recibas la transferencia',
+  }
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 animate-fade-in-up text-center">
-        <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"><X size={18}/></button>
-        <div className="text-[#1E2D24] font-serif text-lg font-bold mb-1">Pago por SINPE Móvil</div>
-        <p className="text-xs text-muted-foreground mb-5">Transferir exactamente:</p>
-        <div className="font-serif text-3xl font-black text-[#C4432D] mb-5">{fmtColones(total)}</div>
-
-        {sinpeNumero ? (
-          <>
-            <div className="flex justify-center mb-4">
-              <QRCodeSVG value={sinpeNumero} size={160} bgColor="transparent" fgColor="#1E2D24" level="M" />
-            </div>
-            <div className="bg-secondary rounded-xl px-4 py-3 mb-4">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Número SINPE</div>
-              <div className="font-bold text-xl tracking-widest text-primary">{sinpeNumero}</div>
-              {sinpeNombre && <div className="text-xs text-muted-foreground mt-0.5">{sinpeNombre}</div>}
-            </div>
-          </>
-        ) : (
-          <div className="bg-secondary rounded-xl p-4 mb-4 text-sm text-muted-foreground">
-            Configurá el número SINPE en <strong>Configuración → Sistema POS</strong>
-          </div>
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={procesando ? undefined : onClose}
+      />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-fade-in-up text-center">
+        {!procesando && (
+          <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
+            <X size={18}/>
+          </button>
         )}
 
-        <Button className="w-full" onClick={onClose}>✓ Ya realizó el pago</Button>
+        <div className="text-4xl mb-2">{iconos[metodoPago]}</div>
+        <h2 className="font-serif text-xl text-primary mb-0.5">
+          Cobrar con {etiquetas[metodoPago]}
+        </h2>
+        <p className="text-xs text-muted-foreground mb-4">{mensajes[metodoPago]}</p>
+
+        {/* Monto total destacado */}
+        <div className="bg-secondary rounded-2xl py-5 px-6 mb-5">
+          <div className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1">Total a cobrar</div>
+          <div className="font-serif text-4xl font-black text-[#C4432D]">{fmtColones(total)}</div>
+        </div>
+
+        {/* QR + número solo para SINPE */}
+        {metodoPago === 'sinpe' && (
+          sinpeNumero ? (
+            <div className="mb-5">
+              <div className="flex justify-center mb-3">
+                <QRCodeSVG value={sinpeNumero} size={150} bgColor="transparent" fgColor="#1E2D24" level="M" />
+              </div>
+              <div className="bg-secondary rounded-xl px-4 py-3">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Número SINPE</div>
+                <div className="font-bold text-2xl tracking-widest text-primary">{sinpeNumero}</div>
+                {sinpeNombre && <div className="text-xs text-muted-foreground mt-0.5">{sinpeNombre}</div>}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 text-xs text-amber-700 text-left">
+              ⚠️ Configura el número SINPE en <strong>Configuración → Sistema POS</strong>
+            </div>
+          )
+        )}
+
+        {/* Botón confirmar */}
+        <Button
+          className="w-full h-12 text-base font-bold"
+          onClick={onConfirmar}
+          disabled={procesando}
+        >
+          {procesando ? (
+            <span className="flex items-center gap-2">
+              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Guardando…
+            </span>
+          ) : (
+            `✓ Confirmar Pago`
+          )}
+        </Button>
+
+        {!procesando && (
+          <button
+            onClick={onClose}
+            className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Cancelar
+          </button>
+        )}
       </div>
     </div>
   )
@@ -225,13 +281,13 @@ export default function NuevaVenta() {
 
   const [categoriaActiva, setCategoriaActiva] = useState<'Pizzas' | 'Extras'>('Pizzas')
   const [busqueda, setBusqueda] = useState('')
-  const [modalTamano, setModalTamano]   = useState<Producto | null>(null)
-  const [modalDesc, setModalDesc]       = useState(false)
-  const [modalCliente, setModalCliente] = useState(false)
-  const [modalSplit, setModalSplit]     = useState(false)
-  const [modalSinpe, setModalSinpe]     = useState(false)
-  const [notaActiva, setNotaActiva]     = useState<string | null>(null)
-  const [procesando, setProcesando]     = useState(false)
+  const [modalTamano, setModalTamano]               = useState<Producto | null>(null)
+  const [modalDesc, setModalDesc]                   = useState(false)
+  const [modalCliente, setModalCliente]             = useState(false)
+  const [modalSplit, setModalSplit]                 = useState(false)
+  const [modalConfirmarPago, setModalConfirmarPago] = useState(false)
+  const [notaActiva, setNotaActiva]                 = useState<string | null>(null)
+  const [procesando, setProcesando]                 = useState(false)
 
   const { subtotalNeto, ivaTotal, descuento, total } = calcularTotales(items, descValor, descTipo)
 
@@ -244,7 +300,10 @@ export default function NuevaVenta() {
 
   // Keyboard shortcuts
   const handleKey = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'F9') { e.preventDefault(); procesarVenta() }
+    if (e.key === 'F9' && items.length > 0 && !procesando) {
+      e.preventDefault()
+      setModalConfirmarPago(true)
+    }
   }, [items, procesando]) // eslint-disable-line
 
   useEffect(() => {
@@ -328,9 +387,10 @@ export default function NuevaVenta() {
       }
 
       limpiarCarrito()
+      setModalConfirmarPago(false)
       showToast(`Venta ${codigoFactura} procesada ✓`, 'ok')
     } catch (err) {
-      console.error(err)
+      console.error('procesarVenta error:', err)
       showToast('Error al procesar la venta', 'error')
     } finally {
       setProcesando(false)
@@ -345,7 +405,6 @@ export default function NuevaVenta() {
 
   function handleMetodoPago(m: MetodoPago) {
     setMetodoPago(m)
-    if (m === 'sinpe' && items.length > 0) setModalSinpe(true)
   }
 
   return (
@@ -535,14 +594,14 @@ export default function NuevaVenta() {
             ))}
           </div>
 
-          {/* Botón procesar */}
+          {/* Botón procesar → abre modal de confirmación */}
           <Button
             className="w-full h-14 text-base font-bold"
-            onClick={procesarVenta}
+            onClick={() => setModalConfirmarPago(true)}
             disabled={items.length === 0 || procesando}
           >
-            {procesando ? 'Procesando…' : `Cobrar ${fmtColones(total)}`}
-            {!procesando && <span className="ml-2 text-xs opacity-60 font-normal">[F9]</span>}
+            {`Cobrar ${fmtColones(total)}`}
+            <span className="ml-2 text-xs opacity-60 font-normal">[F9]</span>
           </Button>
         </div>
       </div>
@@ -552,12 +611,15 @@ export default function NuevaVenta() {
       {modalDesc    && <ModalDescuento onClose={() => setModalDesc(false)} />}
       {modalCliente && <ModalCliente onClose={() => setModalCliente(false)} />}
       {modalSplit   && <ModalSplit total={total} onClose={() => setModalSplit(false)} />}
-      {modalSinpe   && (
-        <ModalSinpe
+      {modalConfirmarPago && (
+        <ModalConfirmarPago
+          metodoPago={metodoPago}
           total={total}
           sinpeNumero={cfg?.sinpeNumero ?? ''}
           sinpeNombre={cfg?.sinpeNombre ?? ''}
-          onClose={() => setModalSinpe(false)}
+          procesando={procesando}
+          onConfirmar={procesarVenta}
+          onClose={() => !procesando && setModalConfirmarPago(false)}
         />
       )}
     </div>
