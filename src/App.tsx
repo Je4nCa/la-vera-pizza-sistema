@@ -27,7 +27,8 @@ export default function App() {
       setAllowed(ok)
 
       if (ok) {
-        try { await seedFirestoreIfEmpty() } catch (e) { console.error('Seed error', e) }
+        // Fire-and-forget: no bloquea la UI mientras siembra datos iniciales
+        seedFirestoreIfEmpty().catch((e) => console.error('Seed error', e))
       }
     })
     return unsub
