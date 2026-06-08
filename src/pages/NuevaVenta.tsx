@@ -4,7 +4,7 @@ import { hCol } from '@/lib/firebase'
 import { fmtColones } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useCarritoStore, useUIStore, useCajeroStore, calcularTotales } from '@/store'
-import { ventasRepository, mesasRepository, configRepository } from '@/repositories'
+import { ventasRepository, mesasRepository } from '@/repositories'
 import { sinUndefined } from '@/lib/utils'
 import { nanoid } from 'nanoid'
 import {
@@ -293,11 +293,10 @@ export default function NuevaVenta() {
     if (procesando) return
     setProcesando(true)
     try {
-      // Obtener/generar número de factura
-      const cfgList = await configRepository.obtenerTodos()
-      const cfg = cfgList[0]
-      const numFactura  = (cfg?.numInicial ?? 1) + (await ventasRepository.contar())
-      const codigoFactura = `${cfg?.prefijo ?? 'FV'}-${String(numFactura).padStart(5, '0')}`
+      // Número de factura: usa config ya cargada + timestamp para evitar getDocs
+      const numFactura    = Date.now()
+      const prefijo       = cfg?.prefijo ?? 'LVP'
+      const codigoFactura = `${prefijo}-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${String(numFactura).slice(-4)}`
 
       const venta: Venta = {
         id:            nanoid(),
