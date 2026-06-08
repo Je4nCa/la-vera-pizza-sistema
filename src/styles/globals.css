@@ -41,6 +41,37 @@
     --dorado: 33 55% 58%;    /* #D4A35A */
     --crema:  36 33% 95%;    /* #F2ECE3 */
   }
+
+  /* ── Modo oscuro ─────────────────────────────────────────── */
+  .dark {
+    --background:         135 15% 10%;  /* verde muy oscuro */
+    --foreground:         36 25% 90%;   /* crema claro */
+
+    --card:               135 12% 14%;
+    --card-foreground:    36 25% 90%;
+
+    --popover:            135 12% 14%;
+    --popover-foreground: 36 25% 90%;
+
+    --primary:            36 25% 85%;   /* crema como primary */
+    --primary-foreground: 135 15% 10%;
+
+    --secondary:          135 12% 18%;
+    --secondary-foreground: 36 25% 85%;
+
+    --muted:              135 12% 18%;
+    --muted-foreground:   135 5% 55%;
+
+    --accent:             135 12% 20%;
+    --accent-foreground:  36 25% 85%;
+
+    --destructive:        11 59% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border:             135 12% 22%;
+    --input:              135 12% 20%;
+    --ring:               33 55% 58%;   /* dorado */
+  }
 }
 
 @layer base {
@@ -51,6 +82,20 @@
   }
   h1, h2, h3 { @apply font-serif; }
 }
+
+/* Modo oscuro — overrides para bg-white hardcodeados */
+.dark .bg-white {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground));
+}
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: hsl(var(--input)) !important;
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border)) !important;
+}
+.dark .text-gray-800 { color: hsl(var(--foreground)) !important; }
 
 /* Scrollbar personalizado */
 ::-webkit-scrollbar       { width: 6px; height: 6px; }
@@ -64,3 +109,15 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in-up { animation: fadeInUp 0.22s ease; }
+
+/* ── Estilos de impresión (cierre de caja) ─────────────────── */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .print-receipt {
+    max-width: 80mm;
+    margin: 0 auto;
+    font-size: 12px;
+    font-family: monospace;
+  }
+}

@@ -8,6 +8,7 @@ import Catalogo      from '@/pages/Catalogo'
 import Clientes      from '@/pages/Clientes'
 import Reportes      from '@/pages/Reportes'
 import Configuracion from '@/pages/Configuracion'
+import CierreCaja    from '@/pages/CierreCaja'
 
 export default function Router() {
   return (
@@ -21,6 +22,7 @@ export default function Router() {
           <Route path="catalogo"      element={<Catalogo />} />
           <Route path="clientes"      element={<Clientes />} />
           <Route path="reportes"      element={<Reportes />} />
+          <Route path="cierre-caja"   element={<CierreCaja />} />
           <Route path="configuracion" element={<Configuracion />} />
         </Route>
       </Routes>

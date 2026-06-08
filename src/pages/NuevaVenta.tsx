@@ -11,8 +11,9 @@ import {
   Trash2, Plus, Minus, StickyNote, CreditCard, Banknote, Smartphone,
   Users, Tag, X, Scissors,
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@/components/ui/button'
-import type { Producto, ItemVenta, MetodoPago, Venta, Mesa } from '@/types'
+import type { Producto, ItemVenta, MetodoPago, Venta, Mesa, ConfigNegocio } from '@/types'
 
 const TAMANOS = [
   { key: 'p',  label: 'Pequeña',     abbr: 'P' },
@@ -168,9 +169,47 @@ function ModalSplit({ total, onClose }: { total: number; onClose: () => void }) 
 }
 
 // ─── Componente principal ────────────────────────────────────────────────────
+// ─── Modal SINPE ──────────────────────────────────────────────────────────────
+function ModalSinpe({ total, sinpeNumero, sinpeNombre, onClose }: {
+  total: number; sinpeNumero: string; sinpeNombre: string; onClose: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 animate-fade-in-up text-center">
+        <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"><X size={18}/></button>
+        <div className="text-[#1E2D24] font-serif text-lg font-bold mb-1">Pago por SINPE Móvil</div>
+        <p className="text-xs text-muted-foreground mb-5">Transferir exactamente:</p>
+        <div className="font-serif text-3xl font-black text-[#C4432D] mb-5">{fmtColones(total)}</div>
+
+        {sinpeNumero ? (
+          <>
+            <div className="flex justify-center mb-4">
+              <QRCodeSVG value={sinpeNumero} size={160} bgColor="transparent" fgColor="#1E2D24" level="M" />
+            </div>
+            <div className="bg-secondary rounded-xl px-4 py-3 mb-4">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wide mb-0.5">Número SINPE</div>
+              <div className="font-bold text-xl tracking-widest text-primary">{sinpeNumero}</div>
+              {sinpeNombre && <div className="text-xs text-muted-foreground mt-0.5">{sinpeNombre}</div>}
+            </div>
+          </>
+        ) : (
+          <div className="bg-secondary rounded-xl p-4 mb-4 text-sm text-muted-foreground">
+            Configurá el número SINPE en <strong>Configuración → Sistema POS</strong>
+          </div>
+        )}
+
+        <Button className="w-full" onClick={onClose}>✓ Ya realizó el pago</Button>
+      </div>
+    </div>
+  )
+}
+
 export default function NuevaVenta() {
   const productos = useCollection<Producto>(() => hCol('productos'))
   const mesas     = useCollection<Mesa>(() => hCol('mesas'))
+  const configs   = useCollection<ConfigNegocio>(() => hCol('config'))
+  const cfg       = configs?.[0]
 
   const {
     items, metodoPago, descValor, descTipo,
@@ -190,6 +229,7 @@ export default function NuevaVenta() {
   const [modalDesc, setModalDesc]       = useState(false)
   const [modalCliente, setModalCliente] = useState(false)
   const [modalSplit, setModalSplit]     = useState(false)
+  const [modalSinpe, setModalSinpe]     = useState(false)
   const [notaActiva, setNotaActiva]     = useState<string | null>(null)
   const [procesando, setProcesando]     = useState(false)
 
@@ -303,6 +343,11 @@ export default function NuevaVenta() {
     { key: 'tarjeta',  icon: <CreditCard size={16}/>,  label: 'Tarjeta'  },
     { key: 'sinpe',    icon: <Smartphone size={16}/>,  label: 'SINPE'    },
   ]
+
+  function handleMetodoPago(m: MetodoPago) {
+    setMetodoPago(m)
+    if (m === 'sinpe' && items.length > 0) setModalSinpe(true)
+  }
 
   return (
     <div className="flex gap-0 -m-6 md:-m-8 h-[calc(100vh-80px)]">
@@ -479,7 +524,7 @@ export default function NuevaVenta() {
             {metodos.map(({ key, icon, label }) => (
               <button
                 key={key}
-                onClick={() => setMetodoPago(key)}
+                onClick={() => handleMetodoPago(key)}
                 className={cn('flex-1 flex flex-col items-center gap-1 rounded-xl py-2.5 border-2 transition-all text-[10px] font-semibold uppercase tracking-wide',
                   metodoPago === key
                     ? 'bg-[#1E2D24] border-[#1E2D24] text-white'
@@ -508,6 +553,14 @@ export default function NuevaVenta() {
       {modalDesc    && <ModalDescuento onClose={() => setModalDesc(false)} />}
       {modalCliente && <ModalCliente onClose={() => setModalCliente(false)} />}
       {modalSplit   && <ModalSplit total={total} onClose={() => setModalSplit(false)} />}
+      {modalSinpe   && (
+        <ModalSinpe
+          total={total}
+          sinpeNumero={cfg?.sinpeNumero ?? ''}
+          sinpeNombre={cfg?.sinpeNombre ?? ''}
+          onClose={() => setModalSinpe(false)}
+        />
+      )}
     </div>
   )
 }

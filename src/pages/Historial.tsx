@@ -27,6 +27,8 @@ export default function Historial() {
   const [filtroEstado, setFiltroEstado] = useState('')
   const [filtroCajero, setFiltroCajero] = useState('')
   const [expandida, setExpandida]       = useState<string | null>(null)
+  const [pagina, setPagina]             = useState(1)
+  const POR_PAGINA = 20
 
   const filtradas = useMemo(() => {
     let list = [...(ventas ?? [])]
@@ -40,6 +42,11 @@ export default function Historial() {
     }
     return list.sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
   }, [ventas, busqueda, filtroFecha, filtroMetodo, filtroEstado, filtroCajero])
+
+  // Resetear página cuando cambian los filtros
+  const resetPagina = () => setPagina(1)
+  const totalPaginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA))
+  const paginadas = filtradas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
 
   const totalFiltrado = filtradas.filter((v) => v.estado !== 'anulada').reduce((s, v) => s + v.total, 0)
 
@@ -61,7 +68,7 @@ export default function Historial() {
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
             value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
+            onChange={(e) => { setBusqueda(e.target.value); resetPagina() }}
             placeholder="Buscar factura o cliente…"
             className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:border-[#1E2D24]"
           />
@@ -69,12 +76,12 @@ export default function Historial() {
         <input
           type="date"
           value={filtroFecha}
-          onChange={(e) => setFiltroFecha(e.target.value)}
+          onChange={(e) => { setFiltroFecha(e.target.value); resetPagina() }}
           className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E2D24]"
         />
         <select
           value={filtroMetodo}
-          onChange={(e) => setFiltroMetodo(e.target.value)}
+          onChange={(e) => { setFiltroMetodo(e.target.value); resetPagina() }}
           className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E2D24]"
         >
           <option value="">Todos los métodos</option>
@@ -84,7 +91,7 @@ export default function Historial() {
         </select>
         <select
           value={filtroEstado}
-          onChange={(e) => setFiltroEstado(e.target.value)}
+          onChange={(e) => { setFiltroEstado(e.target.value); resetPagina() }}
           className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E2D24]"
         >
           <option value="">Todos los estados</option>
@@ -93,7 +100,7 @@ export default function Historial() {
         </select>
         <select
           value={filtroCajero}
-          onChange={(e) => setFiltroCajero(e.target.value)}
+          onChange={(e) => { setFiltroCajero(e.target.value); resetPagina() }}
           className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E2D24]"
         >
           <option value="">Todos los cajeros</option>
@@ -114,7 +121,7 @@ export default function Historial() {
         <div className="text-center py-16 text-muted-foreground">No hay ventas con estos filtros</div>
       ) : (
         <div className="space-y-2">
-          {filtradas.map((venta) => (
+          {paginadas.map((venta) => (
             <div key={venta.id} className={cn('bg-white border border-border rounded-xl overflow-hidden transition-all', venta.estado === 'anulada' && 'opacity-60')}>
               {/* Fila principal */}
               <div
@@ -188,6 +195,30 @@ export default function Historial() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Paginación */}
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <button
+            onClick={() => setPagina((p) => Math.max(1, p - 1))}
+            disabled={pagina === 1}
+            className="px-4 py-2 rounded-xl border border-border text-sm font-semibold disabled:opacity-40 hover:bg-secondary transition-colors"
+          >
+            ← Anterior
+          </button>
+          <span className="text-sm text-muted-foreground px-4">
+            Página <strong>{pagina}</strong> de <strong>{totalPaginas}</strong>
+            <span className="ml-2 text-xs">({filtradas.length} resultados)</span>
+          </span>
+          <button
+            onClick={() => setPagina((p) => Math.min(totalPaginas, p + 1))}
+            disabled={pagina === totalPaginas}
+            className="px-4 py-2 rounded-xl border border-border text-sm font-semibold disabled:opacity-40 hover:bg-secondary transition-colors"
+          >
+            Siguiente →
+          </button>
         </div>
       )}
     </div>

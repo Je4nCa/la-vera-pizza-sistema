@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
+import { Bar, Line } from 'react-chartjs-2'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { fmtColones, fmtFecha, isoFecha, isoMes } from '@/lib/utils'
+import { useUIStore } from '@/store'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -19,10 +21,25 @@ function StatCard({ label, value, sub, color }: { label: string; value: string; 
   )
 }
 
+function chartOpts(dark: boolean) {
+  const textColor  = dark ? 'rgba(240,230,215,0.7)' : 'rgba(30,45,36,0.6)'
+  const gridColor  = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)'
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
+      y: { ticks: { color: textColor, font: { size: 11 } }, grid: { color: gridColor } },
+    },
+  } as const
+}
+
 export default function Dashboard() {
   const navigate  = useNavigate()
   const ventas    = useCollection<Venta>(() => hCol('ventas'))
   const productos = useCollection<Producto>(() => hCol('productos'))
+  const { darkMode } = useUIStore()
 
   const hoy = isoFecha()
   const mes = isoMes()
@@ -62,6 +79,43 @@ export default function Dashboard() {
     [productos]
   )
 
+  // Gráfica 1: ingresos últimos 7 días
+  const chartDias = useMemo(() => {
+    const dias: string[] = []
+    const totales: number[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i)
+      const key = d.toISOString().slice(0, 10)
+      const label = d.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric' })
+      const total = (ventas ?? [])
+        .filter((v) => v.estado !== 'anulada' && v.fecha.startsWith(key))
+        .reduce((s, v) => s + v.total, 0)
+      dias.push(label)
+      totales.push(total)
+    }
+    return { labels: dias, values: totales }
+  }, [ventas])
+
+  // Gráfica 2: ventas por hora hoy
+  const chartHoras = useMemo(() => {
+    const horas = Array.from({ length: 24 }, (_, h) => h)
+    const counts = horas.map((h) =>
+      (ventas ?? []).filter((v) =>
+        v.estado !== 'anulada' &&
+        v.fecha.startsWith(hoy) &&
+        new Date(v.fecha).getHours() === h
+      ).length
+    )
+    // Solo mostrar horas con datos o rango 7am-11pm
+    const rango = horas.slice(7, 23)
+    return {
+      labels: rango.map((h) => `${h}:00`),
+      values: counts.slice(7, 23),
+    }
+  }, [ventas, hoy])
+
+  const opts = chartOpts(darkMode)
+
   return (
     <div className="space-y-6">
       {/* Alertas de stock */}
@@ -83,13 +137,55 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Ventas Hoy"     value={String(ventasHoy)}        sub="facturas emitidas" />
-        <StatCard label="Ingresos Hoy"   value={fmtColones(ingresosHoy)}  sub="antes de impuestos" color="text-[#C4432D]" />
-        <StatCard label="IVA Cobrado Hoy" value={fmtColones(ivaHoy)}      sub="13% sobre gravados"  color="text-[#D4A35A]" />
-        <StatCard label="Total Mes"      value={fmtColones(totalMes)}     sub="ingresos del mes" />
+        <StatCard label="Ventas Hoy"      value={String(ventasHoy)}       sub="facturas emitidas" />
+        <StatCard label="Ingresos Hoy"    value={fmtColones(ingresosHoy)} sub="antes de impuestos" color="text-[#C4432D]" />
+        <StatCard label="IVA Cobrado Hoy" value={fmtColones(ivaHoy)}      sub="13% sobre gravados" color="text-[#D4A35A]" />
+        <StatCard label="Total Mes"       value={fmtColones(totalMes)}    sub="ingresos del mes" />
       </div>
 
-      {/* Recientes + Top */}
+      {/* Gráficas */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-xl border border-border p-5">
+          <div className="font-serif text-base text-primary mb-4">Ingresos Últimos 7 Días</div>
+          <div className="h-48">
+            <Bar
+              data={{
+                labels: chartDias.labels,
+                datasets: [{
+                  data: chartDias.values,
+                  backgroundColor: 'rgba(196,67,45,0.75)',
+                  borderRadius: 6,
+                  borderSkipped: false,
+                }],
+              }}
+              options={opts}
+            />
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-border p-5">
+          <div className="font-serif text-base text-primary mb-4">Ventas por Hora — Hoy</div>
+          <div className="h-48">
+            <Line
+              data={{
+                labels: chartHoras.labels,
+                datasets: [{
+                  data: chartHoras.values,
+                  borderColor: '#D4A35A',
+                  backgroundColor: 'rgba(212,163,90,0.15)',
+                  tension: 0.4,
+                  fill: true,
+                  pointRadius: 4,
+                  pointBackgroundColor: '#D4A35A',
+                }],
+              }}
+              options={opts}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Recientes + Top productos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
