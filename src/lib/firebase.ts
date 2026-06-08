@@ -1,8 +1,8 @@
 import { initializeApp } from 'firebase/app'
 import {
+  getFirestore,
   initializeFirestore,
   persistentLocalCache,
-  persistentMultipleTabManager,
   collection,
   doc,
 } from 'firebase/firestore'
@@ -19,12 +19,16 @@ const firebaseConfig = {
 
 export const firebaseApp = initializeApp(firebaseConfig)
 
-// Persistencia local: writes van al IndexedDB primero → se ven instantáneos
-export const firestore = initializeFirestore(firebaseApp, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
-  }),
-})
+// Persistencia local con fallback seguro
+let _firestore
+try {
+  _firestore = initializeFirestore(firebaseApp, {
+    localCache: persistentLocalCache(),
+  })
+} catch {
+  _firestore = getFirestore(firebaseApp)
+}
+export const firestore = _firestore
 
 export const auth           = getAuth(firebaseApp)
 export const googleProvider = new GoogleAuthProvider()
