@@ -1,5 +1,14 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, doc } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager,
+  getFirestore,
+  enableNetwork,
+  collection,
+  doc,
+  type Firestore,
+} from 'firebase/firestore'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
 const firebaseConfig = {
@@ -11,8 +20,32 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-export const firebaseApp    = initializeApp(firebaseConfig)
-export const firestore      = getFirestore(firebaseApp)
+export const firebaseApp = initializeApp(firebaseConfig)
+
+// ─── Firestore con persistencia de una sola pestaña ───────────────────────────
+// persistentSingleTabManager: NO requiere SharedWorker (a diferencia de
+// MultipleTabManager). Los setDoc/updateDoc/deleteDoc resuelven INMEDIATAMENTE
+// desde el IndexedDB local y sincronizan con el servidor en background.
+// forceOwnership: true → toma el ownership del IDB aunque otra sesión lo tuviera.
+function crearFirestore(): Firestore {
+  try {
+    return initializeFirestore(firebaseApp, {
+      localCache: persistentLocalCache({
+        tabManager: persistentSingleTabManager({ forceOwnership: true }),
+      }),
+    })
+  } catch {
+    // Dev hot-reload: Firestore ya fue inicializado en este proceso
+    console.warn('[Firebase] Firestore ya inicializado — usando instancia existente')
+    return getFirestore(firebaseApp)
+  }
+}
+
+export const firestore = crearFirestore()
+
+// Asegurar que la red esté activa por si quedó deshabilitada en una sesión previa
+enableNetwork(firestore).catch((e) => console.warn('[Firebase] enableNetwork:', e))
+
 export const auth           = getAuth(firebaseApp)
 export const googleProvider = new GoogleAuthProvider()
 
