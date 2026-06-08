@@ -5,11 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/** Elimina campos undefined antes de escribir en Firestore */
+/** Elimina campos undefined antes de escribir en Firestore (recursivo) */
 export function sinUndefined<T extends object>(obj: T): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== undefined)
-  )
+  const result: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === undefined) continue
+    if (Array.isArray(v)) {
+      result[k] = v.map((item) =>
+        item !== null && typeof item === 'object' ? sinUndefined(item) : item
+      )
+    } else if (v !== null && typeof v === 'object') {
+      result[k] = sinUndefined(v as object)
+    } else {
+      result[k] = v
+    }
+  }
+  return result
 }
 
 /** Formatea número como colones costarricenses */

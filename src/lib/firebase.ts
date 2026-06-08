@@ -1,11 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import {
-  getFirestore,
-  initializeFirestore,
-  persistentLocalCache,
-  collection,
-  doc,
-} from 'firebase/firestore'
+import { getFirestore, collection, doc } from 'firebase/firestore'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
 const firebaseConfig = {
@@ -17,19 +11,8 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-export const firebaseApp = initializeApp(firebaseConfig)
-
-// Persistencia local con fallback seguro
-let _firestore
-try {
-  _firestore = initializeFirestore(firebaseApp, {
-    localCache: persistentLocalCache(),
-  })
-} catch {
-  _firestore = getFirestore(firebaseApp)
-}
-export const firestore = _firestore
-
+export const firebaseApp    = initializeApp(firebaseConfig)
+export const firestore      = getFirestore(firebaseApp)
 export const auth           = getAuth(firebaseApp)
 export const googleProvider = new GoogleAuthProvider()
 
