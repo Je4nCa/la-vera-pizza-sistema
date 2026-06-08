@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Vera Pizza — Sistema de Facturación v2.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #1E2D24;
+    --rojo: #C4432D;
+    --dorado: #D4A35A;
+    --crema: #F2ECE3;
+    --negro: #222222;
+    --verde-claro: #2d4235;
+    --rojo-claro: #e8543d;
+    --crema-oscura: #e8e0d4;
+    --blanco: #ffffff;
+    --sombra: rgba(30,45,36,0.12);
+    --sombra-hover: rgba(30,45,36,0.22);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background: var(--crema);
+    color: var(--negro);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+  h1, h2, h3, .titulo { font-family: 'Playfair Display', serif; }
+
+  /* ─── SIDEBAR ─── */
+  #sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 220px;
+    background: var(--verde);
+    display: flex; flex-direction: column;
+    z-index: 100; overflow: hidden;
+  }
+  .sidebar-logo {
+    padding: 28px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+  }
+  .sidebar-logo .la { color: var(--rojo); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; }
+  .sidebar-logo .vera { color: var(--crema); font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 900; line-height: 1; }
+  .sidebar-logo .pizza { color: var(--rojo); font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; }
+  .sidebar-logo .tagline { color: var(--dorado); font-size: 9px; letter-spacing: 1.5px; margin-top: 6px; text-transform: uppercase; }
+  nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 22px; cursor: pointer; color: rgba(242,236,227,0.7);
+    font-weight: 500;
+    transition: all 0.2s; border-left: 3px solid transparent;
+    text-transform: uppercase; font-size: 11px; letter-spacing: 1px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: var(--crema); }
+  .nav-item.active { background: rgba(196,67,45,0.15); color: var(--crema); border-left-color: var(--rojo); }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-footer {
+    padding: 16px 22px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    color: rgba(242,236,227,0.4);
+    font-size: 10px; text-align: center;
+  }
+
+  /* ─── MAIN ─── */
+  #main {
+    margin-left: 220px;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+  .topbar {
+    background: var(--blanco);
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--crema-oscura);
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 8px var(--sombra);
+  }
+  .topbar-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--verde); }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .badge-fecha { background: var(--crema); color: var(--verde); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--crema-oscura); }
+  .content { padding: 28px 32px; flex: 1; }
+
+  /* ─── SECCIONES ─── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ─── TARJETAS ESTADÍSTICAS ─── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--blanco); border-radius: 12px; padding: 20px 22px;
+    border: 1px solid var(--crema-oscura);
+    box-shadow: 0 2px 8px var(--sombra);
+  }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 8px; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--verde); }
+  .stat-sub { font-size: 12px; color: #aaa; margin-top: 4px; }
+  .stat-card.rojo .stat-value { color: var(--rojo); }
+  .stat-card.dorado .stat-value { color: var(--dorado); }
+
+  /* ─── BOTONES ─── */
+  .btn {
+    padding: 10px 20px; border-radius: 8px; border: none;
+    cursor: pointer; font-family: 'Montserrat', sans-serif;
+    font-weight: 600; font-size: 13px; transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .btn-primary { background: var(--verde); color: var(--crema); }
+  .btn-primary:hover { background: var(--verde-claro); transform: translateY(-1px); box-shadow: 0 4px 12px var(--sombra-hover); }
+  .btn-danger { background: var(--rojo); color: white; }
+  .btn-danger:hover { background: var(--rojo-claro); }
+  .btn-dorado { background: var(--dorado); color: var(--negro); }
+  .btn-dorado:hover { background: #c49244; }
+  .btn-outline { background: transparent; border: 2px solid var(--verde); color: var(--verde); }
+  .btn-outline:hover { background: var(--verde); color: var(--crema); }
+  .btn-sm { padding: 6px 14px; font-size: 11px; }
+  .btn-icon { padding: 8px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; transition: all 0.2s; }
+  .btn-icon:hover { transform: scale(1.1); }
+
+  /* ─── INPUTS ─── */
+  .input-group { margin-bottom: 16px; }
+  .input-group label { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: #666; margin-bottom: 6px; }
+  .input-group input, .input-group select, .input-group textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--crema-oscura);
+    border-radius: 8px; font-family: 'Montserrat', sans-serif;
+    font-size: 14px; background: var(--blanco); color: var(--negro);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+    border-color: var(--verde); box-shadow: 0 0 0 3px rgba(30,45,36,0.08);
+  }
+  .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .input-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--blanco); border-radius: 12px;
+    border: 1px solid var(--crema-oscura);
+    box-shadow: 0 2px 8px var(--sombra);
+    padding: 24px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px; padding-bottom: 16px;
+    border-bottom: 1px solid var(--crema-oscura);
+  }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--verde); }
+
+  /* ─── TABLA ─── */
+  .tabla-container { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--crema); color: var(--verde);
+    padding: 11px 14px; text-align: left;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+    border-bottom: 2px solid var(--crema-oscura);
+  }
+  tbody tr { border-bottom: 1px solid var(--crema-oscura); transition: background 0.15s; }
+  tbody tr:hover { background: #faf8f4; }
+  tbody td { padding: 11px 14px; font-size: 13px; color: var(--negro); }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-verde { background: rgba(30,45,36,0.1); color: var(--verde); }
+  .badge-rojo { background: rgba(196,67,45,0.12); color: var(--rojo); }
+  .badge-dorado { background: rgba(212,163,90,0.2); color: #8a6422; }
+  .badge-gris { background: #f0f0f0; color: #888; }
+
+  /* ─── POS / NUEVA VENTA ─── */
+  .pos-layout { display: grid; grid-template-columns: 1fr 380px; gap: 24px; }
+  .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .producto-btn {
+    background: var(--blanco); border: 1.5px solid var(--crema-oscura);
+    border-radius: 12px; padding: 16px 12px; cursor: pointer;
+    text-align: center; transition: all 0.2s;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .producto-btn:hover { border-color: var(--verde); box-shadow: 0 4px 12px var(--sombra); transform: translateY(-2px); }
+  .producto-btn .prod-icon { font-size: 28px; }
+  .producto-btn .prod-name { font-weight: 600; font-size: 12px; color: var(--verde); line-height: 1.3; }
+  .producto-btn .prod-precio { color: var(--rojo); font-weight: 700; font-size: 13px; }
+  .producto-btn .prod-cat { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* ─── CARRITO ─── */
+  .carrito-panel {
+    background: var(--blanco); border-radius: 12px;
+    border: 1px solid var(--crema-oscura);
+    box-shadow: 0 2px 8px var(--sombra);
+    display: flex; flex-direction: column; height: fit-content;
+    position: sticky; top: 80px;
+  }
+  .carrito-header {
+    padding: 18px 20px; border-bottom: 1px solid var(--crema-oscura);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .carrito-header h3 { font-family: 'Playfair Display', serif; font-size: 17px; color: var(--verde); }
+  .carrito-items { flex: 1; max-height: 340px; overflow-y: auto; padding: 12px 0; }
+  .carrito-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 18px; border-bottom: 1px solid #f5f0e8;
+  }
+  .carrito-item-name { flex: 1; font-size: 13px; font-weight: 500; }
+  .carrito-item-price { font-size: 13px; color: var(--rojo); font-weight: 600; min-width: 80px; text-align: right; }
+  .qty-control { display: flex; align-items: center; gap: 6px; }
+  .qty-btn {
+    width: 26px; height: 26px; border-radius: 50%; border: 1.5px solid var(--crema-oscura);
+    background: var(--crema); cursor: pointer; font-size: 16px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
+    color: var(--verde); line-height: 1;
+  }
+  .qty-btn:hover { background: var(--verde); color: white; border-color: var(--verde); }
+  .qty-num { font-weight: 700; font-size: 14px; min-width: 20px; text-align: center; }
+  .carrito-totales {
+    padding: 16px 18px; border-top: 1px solid var(--crema-oscura);
+    background: var(--crema); border-radius: 0 0 12px 12px;
+  }
+  .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+  .total-row.grande { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--verde); font-weight: 700; margin-top: 10px; padding-top: 10px; border-top: 2px solid var(--crema-oscura); }
+  .total-row .label { color: #666; }
+  .total-row .valor { font-weight: 600; }
+  .carrito-vacio { text-align: center; padding: 40px 20px; color: #bbb; }
+  .carrito-vacio .icon { font-size: 48px; margin-bottom: 12px; }
+
+  /* ─── FILTRO CATÁLOGO ─── */
+  .cat-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .cat-pill {
+    padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--crema-oscura);
+    background: var(--blanco); cursor: pointer; font-size: 12px; font-weight: 600;
+    color: #666; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .cat-pill.active { background: var(--verde); color: var(--crema); border-color: var(--verde); }
+  .cat-pill:hover:not(.active) { border-color: var(--verde); color: var(--verde); }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(30,45,36,0.5); z-index: 1000;
+    align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--blanco); border-radius: 16px; padding: 0;
+    max-width: 560px; width: 95%; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-header {
+    padding: 22px 28px; border-bottom: 1px solid var(--crema-oscura);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--verde); border-radius: 16px 16px 0 0;
+  }
+  .modal-header h3 { font-family: 'Playfair Display', serif; color: var(--crema); font-size: 20px; }
+  .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+  .modal-body { padding: 24px 28px; }
+  .modal-footer { padding: 16px 28px; border-top: 1px solid var(--crema-oscura); display: flex; gap: 12px; justify-content: flex-end; background: var(--crema); border-radius: 0 0 16px 16px; }
+
+  /* ─── SCANNER ─── */
+  .scanner-bar {
+    background: var(--verde); border-radius: 10px; padding: 14px 18px;
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  }
+  .scanner-bar input {
+    flex: 1; background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.3);
+    color: white; padding: 10px 14px; border-radius: 8px;
+    font-family: 'Montserrat', sans-serif; font-size: 14px; outline: none;
+  }
+  .scanner-bar input::placeholder { color: rgba(255,255,255,0.5); }
+  .scanner-bar input:focus { border-color: var(--dorado); background: rgba(255,255,255,0.2); }
+  .scanner-bar label { color: rgba(242,236,227,0.8); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+
+  /* ─── CLIENTE ─── */
+  .cliente-panel {
+    background: #f8f6f0; border-radius: 10px; padding: 16px 18px;
+    margin-bottom: 16px; border: 1.5px solid var(--crema-oscura);
+  }
+  .cliente-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--verde); margin-bottom: 12px; }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--verde); color: var(--crema);
+    padding: 14px 22px; border-radius: 10px; font-size: 14px; font-weight: 500;
+    box-shadow: 0 8px 24px var(--sombra-hover);
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s; z-index: 9999;
+    display: flex; align-items: center; gap: 10px;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.error { background: var(--rojo); }
+  #toast.warning { background: var(--dorado); color: var(--negro); }
+
+  /* ─── FACTURA PRINT ─── */
+  @media print {
+    body * { visibility: hidden !important; }
+    #print-area, #print-area * { visibility: visible !important; }
+    #print-area {
+      position: fixed !important; inset: 0 !important;
+      background: white !important;
+      padding: 0 !important; margin: 0 !important;
+      overflow: visible !important;
+    }
+    .modal-overlay, .modal-header, .modal-footer { display: none !important; }
+  }
+
+  /* ─── DIVIDER ─── */
+  .divider { width: 100%; height: 1px; background: var(--crema-oscura); margin: 20px 0; }
+
+  /* ─── BUSCADOR ─── */
+  .search-box { position: relative; margin-bottom: 20px; }
+  .search-box input { padding-left: 40px; }
+  .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #aaa; font-size: 16px; }
+
+  /* ─── PAGO ─── */
+  .pago-opciones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .pago-opt {
+    padding: 14px 10px; border-radius: 10px; border: 2px solid var(--crema-oscura);
+    background: var(--blanco); cursor: pointer; text-align: center;
+    transition: all 0.2s; font-size: 12px; font-weight: 600;
+    color: #666; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .pago-opt .pago-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+  .pago-opt.selected { border-color: var(--verde); background: rgba(30,45,36,0.06); color: var(--verde); }
+  .pago-opt:hover:not(.selected) { border-color: var(--dorado); }
+
+  /* ─── HISTORIAL ─── */
+  .historial-filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+  .historial-filters input[type="date"] { padding: 8px 12px; border: 1.5px solid var(--crema-oscura); border-radius: 8px; font-family: 'Montserrat', sans-serif; font-size: 13px; }
+
+  /* ─── DASHBOARD RECIENTES ─── */
+  .ventas-recientes-list { }
+  .venta-rec {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 0; border-bottom: 1px solid var(--crema-oscura);
+  }
+  .venta-rec:last-child { border-bottom: none; }
+  .venta-rec-num { font-family: 'Playfair Display', serif; font-size: 15px; color: var(--verde); min-width: 60px; }
+  .venta-rec-info { flex: 1; }
+  .venta-rec-cliente { font-weight: 600; font-size: 13px; }
+  .venta-rec-hora { font-size: 11px; color: #aaa; }
+  .venta-rec-total { font-weight: 700; font-size: 15px; color: var(--rojo); }
+
+  /* ─── UTIL ─── */
+  .text-right { text-align: right; }
+  .text-center { text-align: center; }
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .flex { display: flex; }
+  .gap-12 { gap: 12px; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .fw-700 { font-weight: 700; }
+  .color-rojo { color: var(--rojo); }
+  .color-verde { color: var(--verde); }
+  .color-dorado { color: var(--dorado); }
+  .scroll-x { overflow-x: auto; }
+  .full-w { width: 100%; }
+
+  /* ─── RESPONSIVE SIDEBAR ─── */
+  .sidebar-toggle {
+    display: none; background: none; border: none; cursor: pointer;
+    padding: 6px; border-radius: 8px; color: var(--verde); font-size: 22px;
+    transition: background 0.2s;
+  }
+  .sidebar-toggle:hover { background: var(--crema-oscura); }
+  .sidebar-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 99; backdrop-filter: blur(2px);
+  }
+  .sidebar-overlay.open { display: block; }
+
+  /* ─── ANIMACIÓN DE SECCIÓN ─── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .section.active { animation: fadeInUp 0.22s ease; }
+
+  /* ─── FILA ANULADA EN HISTORIAL ─── */
+  .row-anulada td { opacity: 0.45; }
+  .row-anulada td strong, .row-anulada td { text-decoration: line-through; }
+  .row-anulada .badge { text-decoration: none; }
+
+  /* ─── ALERTA DE STOCK ─── */
+  .stock-alert-banner {
+    background: rgba(196,67,45,0.07); border: 1.5px solid rgba(196,67,45,0.2);
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 20px;
+    display: none;
+  }
+  .stock-alert-banner.visible { display: block; }
+  .stock-alert-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--rojo); margin-bottom: 10px; }
+  .stock-alert-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .stock-alert-chip {
+    background: white; border: 1.5px solid rgba(196,67,45,0.3);
+    border-radius: 20px; padding: 4px 12px; font-size: 12px; font-weight: 600;
+    color: var(--rojo); display: flex; align-items: center; gap: 6px;
+  }
+
+  /* ─── CARRITO BADGE ─── */
+  .nav-carrito-badge {
+    background: var(--rojo); color: white; font-size: 10px; font-weight: 700;
+    border-radius: 10px; padding: 1px 6px; margin-left: auto;
+    display: none;
+  }
+  .nav-carrito-badge.visible { display: inline-block; }
+
+  /* ─── INPUT INLINE (reemplaza estilos inline repetidos) ─── */
+  .input-inline {
+    padding: 8px 12px; border: 1.5px solid var(--crema-oscura);
+    border-radius: 8px; font-family: 'Montserrat', sans-serif;
+    font-size: 13px; outline: none; background: var(--blanco); color: var(--negro);
+    transition: border-color 0.2s;
+  }
+  .input-inline:focus { border-color: var(--verde); }
+  .input-inline-full { width: 100%; }
+
+  /* ─── MEJORA PRINT: ticket 80mm ─── */
+  @media print {
+    body * { visibility: hidden !important; }
+    #print-area, #print-area * { visibility: visible !important; }
+    #print-area {
+      position: fixed !important; inset: 0 !important;
+      background: white !important; padding: 0 !important; margin: 0 !important;
+      overflow: visible !important;
+    }
+    #factura-contenido {
+      max-width: 72mm !important; margin: 0 auto !important;
+      padding: 4mm !important; font-size: 11px !important;
+    }
+  }
+
+  /* ─── SCROLL PERSONALIZADO ─── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--crema-oscura); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ccc; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    #sidebar { transform: translateX(-100%); transition: transform 0.3s; z-index: 200; }
+    #sidebar.open { transform: translateX(0); }
+    #main { margin-left: 0 !important; }
+    .sidebar-toggle { display: inline-flex; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .pos-layout { grid-template-columns: 1fr; }
+    .carrito-panel { position: static; }
+    .input-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .content { padding: 16px; }
+    .topbar { padding: 12px 16px; }
+    .topbar-title { font-size: 17px; }
+    .pago-opciones { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ─── SELECTOR DE TAMAÑO ─── */
+  .mesas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .mesa-btn {
+    background: var(--blanco); border: 2px solid var(--crema-oscura);
+    border-radius: 12px; padding: 16px 10px; cursor: pointer;
+    text-align: center; transition: all 0.2s; position: relative;
+  }
+  .mesa-btn:hover:not(.ocupada) { border-color: var(--verde); transform: translateY(-2px); }
+  .mesa-btn .mesa-num { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--verde); font-weight: 900; }
+  .mesa-btn .mesa-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #aaa; }
+  .mesa-btn .mesa-timer { font-size: 11px; font-weight: 700; color: var(--dorado); margin-top: 4px; }
+  .mesa-btn.ocupada { border-color: var(--rojo); background: rgba(196,67,45,0.05); }
+  .mesa-btn.ocupada .mesa-num { color: var(--rojo); }
+  .mesa-btn.ocupada .mesa-label { color: var(--rojo); }
+  .mesa-btn.seleccionada { border-color: var(--verde); background: rgba(30,45,36,0.06); box-shadow: 0 0 0 3px rgba(30,45,36,0.12); }
+  .mesa-badge {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--rojo); color: white; font-size: 9px; font-weight: 700;
+    border-radius: 8px; padding: 2px 6px;
+  }
+
+  /* ─── NOTA DE ÍTEM ─── */
+  .item-nota-input {
+    width: 100%; font-size: 11px; color: #888; border: none;
+    border-bottom: 1px dashed var(--crema-oscura); background: transparent;
+    font-family: 'Montserrat', sans-serif; outline: none; padding: 2px 0;
+    margin-top: 2px;
+  }
+  .item-nota-input:focus { border-color: var(--dorado); color: var(--negro); }
+
+
+  /* ─── DIVIDIR CUENTA ─── */
+  .split-panel {
+    background: rgba(212,163,90,0.1); border: 1.5px solid rgba(212,163,90,0.3);
+    border-radius: 10px; padding: 12px 14px; margin-top: 10px; display: none;
+  }
+  .split-panel.visible { display: block; }
+  .split-panel label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--dorado); }
+  .split-result { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--verde); font-weight: 700; margin-top: 6px; }
+
+  /* ─── PRECIO TAG CLARO ─── */
+  .precio-tag { font-size: 10px; color: #aaa; display: block; margin-top: 1px; }
+
+  /* ─── MODAL MESAS ─── */
+  #sec-mesas .card-header { margin-bottom: 0; }
+  .mesa-conf-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--crema-oscura); }
+  .mesa-conf-row:last-child { border-bottom: none; }
+
+  /* ─── SELECTOR DE TAMAÑO ─── */
+  .tamano-btn {
+    background: var(--blanco); border: 2px solid var(--crema-oscura);
+    border-radius: 12px; padding: 16px 12px; cursor: pointer;
+    text-align: center; transition: all 0.18s;
+  }
+  .tamano-btn:hover { border-color: var(--rojo); transform: translateY(-2px); box-shadow: 0 4px 12px var(--sombra); }
+  .tamano-btn .t-emoji { font-size: 28px; display:block; margin-bottom:6px; }
+  .tamano-btn .t-nombre { font-weight:700; font-size:13px; color: var(--verde); display:block; }
+  .tamano-btn .t-precio { color: var(--rojo); font-weight:700; font-size:15px; display:block; margin-top:4px; }
+
+
+  /* ─── KEYBOARD HINT ─── */
+  .kbd { display: inline-block; background: var(--crema-oscura); color: #666; font-size: 10px; font-family: monospace; padding: 2px 5px; border-radius: 4px; font-weight: 700; }
+
+</style>
+</head>
+<body>
+
+<!-- ─────────────── SIDEBAR ─────────────── -->
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <div class="la">— La —</div>
+    <div class="vera">VERA</div>
+    <div class="pizza">PIZZA</div>
+    <div class="tagline">Masa Madre, Sabor que se Siente</div>
+  </div>
+  <nav>
+    <div class="nav-item active" data-section="dashboard" onclick="showSection('dashboard', this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" data-section="nueva-venta" onclick="showSection('nueva-venta', this)">
+      <span class="nav-icon">🍕</span> Nueva Venta
+      <span class="nav-carrito-badge" id="nav-cart-badge">0</span>
+    </div>
+    <div class="nav-item" data-section="mesas" onclick="showSection('mesas', this)">
+      <span class="nav-icon">🪑</span> Mesas
+    </div>
+    <div class="nav-item" data-section="historial" onclick="showSection('historial', this)">
+      <span class="nav-icon">📋</span> Historial
+    </div>
+    <div class="nav-item" data-section="catalogo" onclick="showSection('catalogo', this)">
+      <span class="nav-icon">📦</span> Catálogo
+    </div>
+    <div class="nav-item" data-section="clientes" onclick="showSection('clientes', this)">
+      <span class="nav-icon">👥</span> Clientes
+    </div>
+    <div class="nav-item" data-section="reportes" onclick="showSection('reportes', this)">
+      <span class="nav-icon">📈</span> Reportes
+    </div>
+    <div class="nav-item" data-section="configuracion" onclick="showSection('configuracion', this)">
+      <span class="nav-icon">⚙️</span> Configuración
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    Creado por: Montevo Studio © | La Vera Pizza POS v26.1
+  </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- ─────────────── MAIN ─────────────── -->
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="sidebar-toggle" onclick="toggleSidebar()" title="Menú">☰</button>
+      <div class="topbar-title" id="page-title">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <div class="badge-fecha" id="fecha-actual"></div>
+      <button class="btn btn-primary btn-sm" onclick="showSection('nueva-venta', document.querySelector('[data-section=nueva-venta]'))">
+        ➕ Nueva Venta
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════ DASHBOARD ══ -->
+    <div id="sec-dashboard" class="section active">
+      <!-- Alerta de stock bajo -->
+      <div class="stock-alert-banner" id="stock-alert-banner">
+        <div class="stock-alert-title">⚠️ Productos con stock bajo</div>
+        <div class="stock-alert-list" id="stock-alert-list"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Ventas Hoy</div>
+          <div class="stat-value" id="stat-ventas-hoy">0</div>
+          <div class="stat-sub">facturas emitidas</div>
+        </div>
+        <div class="stat-card rojo">
+          <div class="stat-label">Ingresos Hoy</div>
+          <div class="stat-value" id="stat-ingresos-hoy">₡0</div>
+          <div class="stat-sub">antes de impuestos</div>
+        </div>
+        <div class="stat-card dorado">
+          <div class="stat-label">IVA Cobrado Hoy</div>
+          <div class="stat-value" id="stat-iva-hoy">₡0</div>
+          <div class="stat-sub">13% sobre gravados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Mes</div>
+          <div class="stat-value" id="stat-mes">₡0</div>
+          <div class="stat-sub">ingresos del mes</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Ventas Recientes</div>
+            <button class="btn btn-outline btn-sm" onclick="showSection('historial', document.querySelector('[data-section=historial]'))">Ver todas</button>
+          </div>
+          <div class="ventas-recientes-list" id="dash-recientes">
+            <div style="text-align:center;color:#bbb;padding:30px">No hay ventas aún</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Productos Más Vendidos</div>
+          </div>
+          <div id="dash-top-productos">
+            <div style="text-align:center;color:#bbb;padding:30px">No hay datos aún</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ NUEVA VENTA ══ -->
+    <div id="sec-nueva-venta" class="section">
+      <div class="pos-layout">
+        <!-- Panel izquierdo: Catálogo + Scanner -->
+        <div>
+          <!-- Scanner -->
+          <div class="scanner-bar">
+            <label>📷 Código de Barras</label>
+            <input type="text" id="scanner-input" placeholder="Escanee o escriba el código..." 
+              onkeydown="handleScannerKey(event)" autocomplete="off" autofocus>
+            <button class="btn btn-dorado btn-sm" onclick="buscarCodigoBarras()">Buscar</button>
+          </div>
+
+          <!-- Filtros -->
+          <div class="cat-filter" id="pos-categorias">
+            <div class="cat-pill active" onclick="filtrarCategoriaPOS('Todos', this)">Todos</div>
+          </div>
+
+          <!-- Búsqueda -->
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Buscar producto..." oninput="filtrarBusqueda(this.value)" style="width:100%;padding:10px 14px 10px 40px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:14px;outline:none;">
+          </div>
+
+          <!-- Grid productos -->
+          <div class="productos-grid" id="pos-productos"></div>
+        </div>
+
+        <!-- Panel derecho: Carrito -->
+        <div class="carrito-panel">
+          <div class="carrito-header">
+            <h3>🛒 Orden Actual</h3>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-outline btn-sm" onclick="toggleSplit()" title="Dividir cuenta">÷ Dividir</button>
+              <button class="btn btn-danger btn-sm" onclick="limpiarCarrito()">Limpiar</button>
+            </div>
+          </div>
+
+          <!-- Cliente -->
+          <div style="padding: 12px 18px; border-bottom: 1px solid var(--crema-oscura);">
+            <div class="cliente-label">Cliente</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <input type="text" id="pos-cliente" placeholder="Consumidor Final" 
+                style="flex:1;padding:8px 12px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;">
+              <button class="btn btn-outline btn-sm" onclick="buscarClienteModal()">👥</button>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:8px;">
+              <input type="text" id="pos-cedula" placeholder="Cédula / RUC" style="flex:1;padding:8px 12px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;">
+              <input type="text" id="pos-telefono" placeholder="Teléfono" style="flex:1;padding:8px 12px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;">
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div class="carrito-items" id="carrito-items">
+            <div class="carrito-vacio">
+              <div class="icon">🍕</div>
+              <div>Agregue productos<br>a la orden</div>
+            </div>
+          </div>
+
+          <!-- Totales -->
+          <div class="carrito-totales">
+            <div class="total-row">
+              <span class="label">Subtotal (sin IVA)</span>
+              <span class="valor" id="total-subtotal">₡0.00</span>
+            </div>
+            <div class="total-row">
+              <span class="label">IVA 13% (gravados)</span>
+              <span class="valor" id="total-iva">₡0.00</span>
+            </div>
+            <div class="total-row">
+              <span class="label">Descuento</span>
+              <span class="valor" id="total-descuento" style="color:var(--rojo)">-₡0.00</span>
+            </div>
+            <div class="total-row grande">
+              <span>TOTAL</span>
+              <span id="total-final">₡0.00</span>
+            </div>
+            <!-- Descuento -->
+            <div style="display:flex;gap:8px;margin-top:12px;">
+              <input type="number" id="desc-valor" placeholder="Descuento ₡" min="0" style="flex:1;padding:8px 12px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;" oninput="recalcular()">
+              <select id="desc-tipo" onchange="recalcular()" style="padding:8px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;">
+                <option value="monto">₡ Monto</option>
+                <option value="porcent">% Porcentaje</option>
+              </select>
+            </div>
+            <!-- Método de pago -->
+            <div class="pago-opciones" style="margin-top:12px;">
+              <div class="pago-opt selected" onclick="selectPago('efectivo', this)">
+                <span class="pago-icon">💵</span> Efectivo
+              </div>
+              <div class="pago-opt" onclick="selectPago('tarjeta', this)">
+                <span class="pago-icon">💳</span> Tarjeta
+              </div>
+              <div class="pago-opt" onclick="selectPago('sinpe', this)">
+                <span class="pago-icon">📱</span> SINPE
+              </div>
+            </div>
+            <!-- Efectivo recibido -->
+            <div id="efectivo-panel" style="margin-top:8px;">
+              <input type="number" id="efectivo-recibido" placeholder="Monto recibido (₡)" min="0"
+                style="width:100%;padding:8px 12px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;" oninput="calcularVuelto()">
+              <div style="display:flex;justify-content:space-between;margin-top:6px;font-size:13px;color:#666;">
+                <span>Vuelto:</span>
+                <span id="vuelto-val" style="font-weight:700;color:var(--verde)">₡0.00</span>
+              </div>
+            </div>
+
+            <!-- Dividir cuenta -->
+            <div class="split-panel" id="split-panel">
+              <label>Dividir entre personas</label>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+                <button class="qty-btn" onclick="changeSplit(-1)">−</button>
+                <span id="split-num" style="font-weight:700;font-size:16px;min-width:24px;text-align:center;">2</span>
+                <button class="qty-btn" onclick="changeSplit(1)">+</button>
+                <div class="split-result" id="split-result" style="margin-left:auto;font-size:15px;">₡0.00 c/u</div>
+              </div>
+            </div>
+
+            <!-- Mesa asignada -->
+            <div id="mesa-asignada-tag" style="display:none;margin-top:8px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(30,45,36,0.06);border-radius:8px;padding:8px 12px;">
+                <span style="font-size:12px;font-weight:700;color:var(--verde);">🪑 <span id="mesa-asignada-label">Mesa —</span></span>
+                <button onclick="desasignarMesa()" style="background:none;border:none;cursor:pointer;font-size:12px;color:#aaa;">✕</button>
+              </div>
+            </div>
+
+            <button class="btn btn-primary full-w mt-16" onclick="procesarVenta()" style="justify-content:center;font-size:14px;padding:14px;">
+              ✅ Procesar Venta <span id="kbd-hint" style="opacity:0.5;font-size:11px;margin-left:6px;">[F9]</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ MESAS ══ -->
+    <div id="sec-mesas" class="section">
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+          <div class="card-title">Gestión de Mesas</div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <span style="font-size:12px;color:#aaa;">Mesas configuradas: <strong id="mesas-count">10</strong></span>
+            <button class="btn btn-outline btn-sm" onclick="configurarMesas()">⚙️ Configurar</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:16px;height:16px;border-radius:4px;background:#f0f5f1;border:2px solid #2d4235;display:inline-block;"></span> Libre</div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:16px;height:16px;border-radius:4px;background:rgba(196,67,45,0.05);border:2px solid var(--rojo);display:inline-block;"></span> Ocupada</div>
+        </div>
+        <div class="mesas-grid" id="mesas-grid"></div>
+      </div>
+      <div class="card" id="mesa-detalle-card" style="display:none;">
+        <div class="card-header">
+          <div class="card-title" id="mesa-detalle-titulo">Mesa 1</div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="irAVentaMesa()">🍕 Tomar Orden</button>
+            <button class="btn btn-danger btn-sm" onclick="liberarMesa()">✓ Liberar Mesa</button>
+          </div>
+        </div>
+        <div id="mesa-detalle-info"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ HISTORIAL ══ -->
+    <div id="sec-historial" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Historial de Ventas</div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-outline btn-sm" onclick="exportarCSV()">📥 Exportar CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="exportarExcel()">📊 Exportar Excel</button>
+          </div>
+        </div>
+        <div class="historial-filters">
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#666;display:block;margin-bottom:4px;">Desde</label>
+            <input type="date" id="filtro-desde" onchange="renderHistorial()">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#666;display:block;margin-bottom:4px;">Hasta</label>
+            <input type="date" id="filtro-hasta" onchange="renderHistorial()">
+          </div>
+          <div>
+            <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#666;display:block;margin-bottom:4px;">Método de Pago</label>
+            <select id="filtro-pago" onchange="renderHistorial()" style="padding:8px 12px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;">
+              <option value="">Todos</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="tarjeta">Tarjeta</option>
+              <option value="sinpe">SINPE</option>
+            </select>
+          </div>
+          <div style="margin-top:20px;">
+            <input type="text" id="filtro-buscar" placeholder="🔍 Buscar..." oninput="renderHistorial()" style="padding:8px 12px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;">
+          </div>
+          <div style="margin-top:20px;">
+            <button class="btn btn-outline btn-sm" onclick="limpiarFiltros()">✕ Limpiar</button>
+          </div>
+        </div>
+        <div class="tabla-container">
+          <table>
+            <thead>
+              <tr>
+                <th>N° Factura</th>
+                <th>Fecha / Hora</th>
+                <th>Cliente</th>
+                <th>Items</th>
+                <th>Subtotal</th>
+                <th>IVA</th>
+                <th>Total</th>
+                <th>Pago</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-historial">
+              <tr><td colspan="10" style="text-align:center;color:#bbb;padding:30px;">No hay ventas registradas</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ CATÁLOGO ══ -->
+    <div id="sec-catalogo" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Catálogo de Productos</div>
+          <button class="btn btn-primary" onclick="abrirModalProducto()">➕ Nuevo Producto</button>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
+          <div class="search-box" style="flex:1;min-width:200px;margin:0;">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="Buscar producto..." oninput="renderCatalogo(this.value)" style="width:100%;padding:10px 14px 10px 40px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:14px;outline:none;">
+          </div>
+          <select id="cat-filtro-cat" onchange="renderCatalogo()" style="padding:10px 14px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:14px;outline:none;">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+        <div class="tabla-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio Unit.</th>
+                <th>IVA</th>
+                <th>Precio con IVA</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-catalogo">
+              <tr><td colspan="9" style="text-align:center;color:#bbb;padding:30px;">No hay productos</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ CLIENTES ══ -->
+    <div id="sec-clientes" class="section">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Clientes Registrados</div>
+          <button class="btn btn-primary" onclick="abrirModalCliente()">➕ Nuevo Cliente</button>
+        </div>
+        <div style="margin-bottom:20px;">
+          <input type="text" placeholder="🔍 Buscar cliente..." oninput="renderClientes(this.value)" style="width:340px;padding:10px 14px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:14px;outline:none;">
+        </div>
+        <div class="tabla-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Cédula / RUC</th>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Tipo</th>
+                <th>Facturas</th>
+                <th>Total Compras</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-clientes">
+              <tr><td colspan="8" style="text-align:center;color:#bbb;padding:30px;">No hay clientes registrados</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ REPORTES ══ -->
+    <div id="sec-reportes" class="section">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Facturas</div>
+          <div class="stat-value" id="rep-total-facturas">0</div>
+          <div class="stat-sub">históricas</div>
+        </div>
+        <div class="stat-card rojo">
+          <div class="stat-label">Ingresos Totales</div>
+          <div class="stat-value" id="rep-ingresos">₡0</div>
+          <div class="stat-sub">neto antes de IVA</div>
+        </div>
+        <div class="stat-card dorado">
+          <div class="stat-label">IVA Total</div>
+          <div class="stat-value" id="rep-iva">₡0</div>
+          <div class="stat-sub">por pagar al MH</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ticket Promedio</div>
+          <div class="stat-value" id="rep-ticket">₡0</div>
+          <div class="stat-sub">por factura</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Ventas por Método de Pago</div></div>
+          <div id="rep-pago-breakdown"></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Ventas por Categoría</div></div>
+          <div id="rep-cat-breakdown"></div>
+        </div>
+      </div>
+      <div class="card mt-24">
+        <div class="card-header">
+          <div class="card-title">Exportar Reporte Contable</div>
+        </div>
+        <p style="color:#666;font-size:14px;margin-bottom:16px;">Exporta los datos de ventas e IVA en formato compatible con Excel para la declaración de impuestos ante el Ministerio de Hacienda de Costa Rica.</p>
+        <div style="display:flex;gap:12px;">
+          <button class="btn btn-primary" onclick="exportarReporteContable()">📊 Exportar Reporte IVA</button>
+          <button class="btn btn-outline" onclick="exportarCSV()">📥 Exportar CSV Completo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════ CONFIGURACIÓN ══ -->
+    <div id="sec-configuracion" class="section">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Datos del Negocio</div></div>
+          <div class="input-group">
+            <label>Nombre del Establecimiento</label>
+            <input type="text" id="conf-nombre" value="La Vera Pizza" oninput="guardarConfig()">
+          </div>
+          <div class="input-group">
+            <label>Cédula Jurídica</label>
+            <input type="text" id="conf-cedula" placeholder="3-101-XXXXXX" oninput="guardarConfig()">
+          </div>
+          <div class="input-group">
+            <label>Dirección</label>
+            <input type="text" id="conf-direccion" placeholder="Dirección del local" oninput="guardarConfig()">
+          </div>
+          <div class="input-row">
+            <div class="input-group">
+              <label>Teléfono</label>
+              <input type="text" id="conf-telefono" placeholder="2XXX-XXXX" oninput="guardarConfig()">
+            </div>
+            <div class="input-group">
+              <label>Email</label>
+              <input type="email" id="conf-email" placeholder="info@..." oninput="guardarConfig()">
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Mensaje en Pie de Factura</label>
+            <input type="text" id="conf-mensaje" value="¡Gracias por su visita! Masa Madre, Sabor que se Siente." oninput="guardarConfig()">
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Configuración de Impuestos</div></div>
+          <div class="input-row">
+            <div class="input-group">
+              <label>Tasa IVA (%)</label>
+              <input type="number" id="conf-iva" value="13" oninput="guardarConfig()">
+            </div>
+            <div class="input-group">
+              <label>Moneda</label>
+              <select id="conf-moneda" onchange="guardarConfig()">
+                <option value="CRC">₡ Colones (CRC)</option>
+                <option value="USD">$ Dólares (USD)</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-group">
+            <label>Número de Factura Inicial</label>
+            <input type="number" id="conf-num-inicial" value="1" oninput="guardarConfig()">
+          </div>
+          <div class="input-group">
+            <label>Prefijo de Factura</label>
+            <input type="text" id="conf-prefijo" value="LVP-" oninput="guardarConfig()">
+          </div>
+          <div class="divider"></div>
+          <div class="card-header" style="border:none;padding:0;margin-bottom:12px;"><div class="card-title" style="font-size:15px;">Datos para Hacienda (IFE)</div></div>
+          <div class="input-group">
+            <label>Actividad Económica</label>
+            <input type="text" id="conf-actividad" placeholder="5610 - Restaurantes" oninput="guardarConfig()">
+          </div>
+          <div class="input-group">
+            <label>Tipo de Contribuyente</label>
+            <select id="conf-tipo-cont" onchange="guardarConfig()">
+              <option>Persona Jurídica</option>
+              <option>Persona Física</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-24">
+        <div class="card-header"><div class="card-title">Gestión de Datos</div></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="exportarTodosDatos()">💾 Exportar Todos los Datos</button>
+          <button class="btn btn-outline" onclick="importarDatos()">📂 Importar Datos</button>
+          <button class="btn btn-danger" onclick="confirmarBorrarDatos()">🗑️ Borrar Todos los Datos</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ─────────────── MODALES ─────────────── -->
+
+<!-- Modal: Producto -->
+<div class="modal-overlay" id="modal-producto">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-prod-titulo">Nuevo Producto</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-producto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="prod-id">
+      <div class="input-row">
+        <div class="input-group">
+          <label>Nombre del Producto *</label>
+          <input type="text" id="prod-nombre" placeholder="Pizza Margherita">
+        </div>
+        <div class="input-group">
+          <label>Categoría *</label>
+          <select id="prod-categoria" onchange="togglePizzaSizes(this.value)">
+            <option value="Pizzas">🍕 Pizzas</option>
+            <option value="Extras">🥖 Extras</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Código de Barras</label>
+          <input type="text" id="prod-codigo" placeholder="EAN-13 o código interno">
+        </div>
+        <div class="input-group">
+          <label>Código SKU / Interno</label>
+          <input type="text" id="prod-sku" placeholder="SKU-001">
+        </div>
+      </div>
+      <!-- Precio único (Extras) -->
+      <div id="precio-unico-row" class="input-row">
+        <div class="input-group">
+          <label>Precio de Venta (₡) * <span style="font-weight:400;color:#aaa;font-size:10px;">precio que paga el cliente</span></label>
+          <input type="number" id="prod-precio" placeholder="0.00" min="0" step="1">
+        </div>
+        <div class="input-group">
+          <label>Aplica IVA 13%</label>
+          <select id="prod-iva">
+            <option value="1">Sí - Aplica IVA 13%</option>
+            <option value="0">No - Exento de IVA</option>
+          </select>
+        </div>
+      </div>
+      <!-- Precios por tamaño (Pizzas) -->
+      <div id="precios-pizza-row" style="display:none;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#666;margin-bottom:10px;">Precios por tamaño (₡)</div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>🔴 Pequeña</label>
+            <input type="number" id="prod-precio-p" placeholder="3000" min="0" step="1">
+          </div>
+          <div class="input-group">
+            <label>🟡 Mediana</label>
+            <input type="number" id="prod-precio-m" placeholder="4500" min="0" step="1">
+          </div>
+        </div>
+        <div class="input-row">
+          <div class="input-group">
+            <label>🟠 Grande</label>
+            <input type="number" id="prod-precio-g" placeholder="9000" min="0" step="1">
+          </div>
+          <div class="input-group">
+            <label>🔵 Extra Grande</label>
+            <input type="number" id="prod-precio-xl" placeholder="12000" min="0" step="1">
+          </div>
+        </div>
+        <div class="input-group" style="margin-top:4px;">
+          <label>Aplica IVA 13%</label>
+          <select id="prod-iva-pizza">
+            <option value="1">Sí - Aplica IVA 13%</option>
+            <option value="0">No - Exento de IVA</option>
+          </select>
+        </div>
+      </div>
+      <!-- Stock solo para Extras -->
+      <div id="stock-row" class="input-row" style="display:none;">
+        <div class="input-group">
+          <label>Stock Actual</label>
+          <input type="number" id="prod-stock" placeholder="Unidades disponibles" min="0">
+        </div>
+        <div class="input-group">
+          <label>Alerta Stock Mínimo</label>
+          <input type="number" id="prod-stock-min" placeholder="Alertar cuando llegue a..." min="0">
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Descripción</label>
+        <textarea id="prod-descripcion" placeholder="Descripción del producto..." style="height:80px;resize:vertical;"></textarea>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Ícono (emoji)</label>
+          <input type="text" id="prod-icono" placeholder="🍕" maxlength="4">
+        </div>
+        <div class="input-group">
+          <label>Estado</label>
+          <select id="prod-estado">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-producto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarProducto()">💾 Guardar Producto</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Cliente -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-cli-titulo">Nuevo Cliente</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-cliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cli-id">
+      <div class="input-row">
+        <div class="input-group">
+          <label>Nombre Completo *</label>
+          <input type="text" id="cli-nombre" placeholder="Nombre del cliente">
+        </div>
+        <div class="input-group">
+          <label>Tipo de Cédula</label>
+          <select id="cli-tipo">
+            <option value="fisica">Cédula Física (9 dígitos)</option>
+            <option value="juridica">Cédula Jurídica</option>
+            <option value="dimex">DIMEX</option>
+            <option value="nite">NITE</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>N° Cédula / RUC</label>
+          <input type="text" id="cli-cedula" placeholder="0-0000-0000">
+        </div>
+        <div class="input-group">
+          <label>Teléfono</label>
+          <input type="text" id="cli-telefono" placeholder="8888-8888">
+        </div>
+      </div>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="cli-email" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="input-group">
+          <label>Provincia</label>
+          <select id="cli-provincia">
+            <option>San José</option><option>Alajuela</option><option>Cartago</option>
+            <option>Heredia</option><option>Guanacaste</option><option>Puntarenas</option>
+            <option>Limón</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Dirección</label>
+        <input type="text" id="cli-direccion" placeholder="Dirección completa">
+      </div>
+      <div class="input-group">
+        <label>Notas</label>
+        <textarea id="cli-notas" placeholder="Notas adicionales..." style="height:70px;resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCliente()">💾 Guardar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Buscar Cliente en POS -->
+<div class="modal-overlay" id="modal-buscar-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Seleccionar Cliente</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-buscar-cliente')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="text" placeholder="🔍 Buscar por nombre o cédula..." oninput="filtrarClientesBusqueda(this.value)" style="width:100%;padding:10px 14px;border:1.5px solid #e8e0d4;border-radius:8px;font-family:'Montserrat',sans-serif;font-size:14px;outline:none;margin-bottom:16px;">
+      <div id="lista-clientes-busqueda" style="max-height:320px;overflow-y:auto;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-buscar-cliente')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Tamaño de Pizza -->
+<div class="modal-overlay" id="modal-tamano">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-header">
+      <h3 id="modal-tamano-titulo">Seleccionar Tamaño</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-tamano')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:#888;font-size:13px;margin-bottom:18px;" id="modal-tamano-desc"></p>
+      <div id="tamano-opciones" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-tamano')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Factura / Recibo -->
+<div class="modal-overlay" id="modal-factura">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header" style="background:var(--verde);">
+      <h3>✅ Venta Procesada</h3>
+      <button class="modal-close" onclick="cerrarModal('modal-factura')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div id="print-area"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="cerrarModal('modal-factura')">Cerrar</button>
+      <button class="btn btn-outline" onclick="showSection('nueva-venta', document.querySelector('[data-section=nueva-venta]'));cerrarModal('modal-factura');">➕ Nueva Venta</button>
+      <button class="btn btn-dorado" onclick="imprimirFactura()">🖨️ Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//                   ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════
+let carrito = [];
+let metodoPago = 'efectivo';
+let categoriaFiltroPos = 'Todos';
+let editandoProductoId = null;
+let editandoClienteId = null;
+
+// ─── DATOS ───
+function getData(key, def) {
+  try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; }
+}
+function setData(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+
+function getProductos() { return getData('lvp_productos', []); }
+function setProductos(p) { setData('lvp_productos', p); }
+function getVentas() { return getData('lvp_ventas', []); }
+function setVentas(v) { setData('lvp_ventas', v); }
+function getClientes() { return getData('lvp_clientes', []); }
+function setClientes(c) { setData('lvp_clientes', c); }
+function getConfig() {
+  return getData('lvp_config', {
+    nombre: 'La Vera Pizza', cedula: '', direccion: '', telefono: '', email: '',
+    iva: 13, moneda: 'CRC', numInicial: 1, prefijo: 'LVP-',
+    mensaje: '¡Gracias por su visita! Masa Madre, Sabor que se Siente.',
+    actividad: '5610 - Restaurantes', tipoCont: 'Persona Jurídica'
+  });
+}
+function setConfig(c) { setData('lvp_config', c); }
+
+function getNextFacturaNum() {
+  const conf = getConfig();
+  const ventas = getVentas();
+  if (!ventas.length) return conf.numInicial || 1;
+  return Math.max(...ventas.map(v => v.numFactura || 0)) + 1;
+}
+
+
+// ─── SIDEBAR RESPONSIVE ───
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.toggle('open');
+  overlay.classList.toggle('open');
+}
+// Cerrar sidebar al navegar en móvil
+function showSection(id, el) {
+
+  // Cerrar sidebar en mobile
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  const titles = {
+    'dashboard': 'Dashboard', 'nueva-venta': 'Nueva Venta', 'historial': 'Historial de Ventas',
+    'catalogo': 'Catálogo de Productos', 'clientes': 'Clientes', 'reportes': 'Reportes',
+    'configuracion': 'Configuración', 'mesas': 'Gestión de Mesas'
+  };
+  document.getElementById('page-title').textContent = titles[id] || id;
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'historial') renderHistorial();
+  if (id === 'catalogo') { renderCatalogo(); poblarSelectCat(); }
+  if (id === 'clientes') renderClientes();
+  if (id === 'reportes') renderReportes();
+  if (id === 'configuracion') cargarConfig();
+  if (id === 'nueva-venta') { renderPosCatalogo(); renderCarrito(); }
+  if (id === 'mesas') renderMesas();
+}
+
+// ─── FECHA ───
+function updateFecha() {
+  const now = new Date();
+  const opts = { weekday:'long', year:'numeric', month:'long', day:'numeric' };
+  const hora = now.toLocaleTimeString('es-CR', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('fecha-actual').textContent = now.toLocaleDateString('es-CR', opts) + ' · ' + hora;
+}
+setInterval(updateFecha, 1000);
+updateFecha();
+
+// ─── FORMATO ───
+function fmtColones(n) {
+  return '₡' + Number(n).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtFecha(iso) {
+  return new Date(iso).toLocaleString('es-CR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// ═══════════════════════════════════════════════════════
+//                   POS / NUEVA VENTA
+// ═══════════════════════════════════════════════════════
+
+function renderPosCatalogo() {
+  const prods = getProductos().filter(p => p.estado === 'activo' || !p.estado);
+  const cats = ['Todos', ...new Set(prods.map(p => p.categoria))];
+  const catDiv = document.getElementById('pos-categorias');
+  catDiv.innerHTML = cats.map(c =>
+    `<div class="cat-pill ${c === categoriaFiltroPos ? 'active' : ''}" onclick="filtrarCategoriaPOS('${c}', this)">${iconoCat(c)} ${c}</div>`
+  ).join('');
+  renderProductosPOS(prods);
+}
+
+function iconoCat(c) {
+  const m = { Pizzas:'🍕', Extras:'🥖', Todos:'🍽️' };
+  return m[c] || '📦';
+}
+
+function filtrarCategoriaPOS(cat, el) {
+  categoriaFiltroPos = cat;
+  // FIX: limitar la selección solo a las pills dentro del POS, no afectar otras secciones
+  document.querySelectorAll('#pos-categorias .cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const prods = getProductos().filter(p => p.estado === 'activo' || !p.estado);
+  const filtrado = cat === 'Todos' ? prods : prods.filter(p => p.categoria === cat);
+  renderProductosPOS(filtrado);
+}
+
+function filtrarBusqueda(q) {
+  const prods = getProductos().filter(p => {
+    if (p.estado === 'inactivo') return false;
+    const inCat = categoriaFiltroPos === 'Todos' || p.categoria === categoriaFiltroPos;
+    const term = q.toLowerCase();
+    return inCat && (p.nombre.toLowerCase().includes(term) || (p.codigo || '').toLowerCase().includes(term));
+  });
+  renderProductosPOS(prods);
+}
+
+function renderProductosPOS(prods) {
+  const grid = document.getElementById('pos-productos');
+  if (!prods.length) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#bbb;padding:40px;">No hay productos disponibles</div>';
+    return;
+  }
+  grid.innerHTML = prods.map(p => {
+    const esPizza = p.categoria === 'Pizzas' && p.precios;
+    const stockNum = p.stock !== undefined && p.stock !== '' ? Number(p.stock) : null;
+    const stockMin = p.stockMin !== undefined && p.stockMin !== '' ? Number(p.stockMin) : 5;
+    const stockBajo = !esPizza && stockNum !== null && stockNum <= stockMin;
+    const sinStock = !esPizza && stockNum !== null && stockNum <= 0;
+    let precioLabel = '';
+    if (esPizza) {
+      const precios = p.precios;
+      const vals = [precios.p, precios.m, precios.g, precios.xl].filter(v => v > 0);
+      precioLabel = vals.length ? `₡${Math.min(...vals).toLocaleString('es-CR')} – ₡${Math.max(...vals).toLocaleString('es-CR')}` : '';
+    } else {
+      precioLabel = fmtColones(p.precio);
+    }
+    return `
+    <div class="producto-btn ${sinStock ? 'sin-stock' : ''}" onclick="${sinStock ? '' : `agregarAlCarrito('${p.id}')`}" style="${sinStock ? 'opacity:0.4;cursor:not-allowed;' : ''}">
+      <div class="prod-icon">${p.icono || iconoCat(p.categoria)}</div>
+      <div class="prod-name">${p.nombre}</div>
+      <div class="prod-cat">${p.categoria}</div>
+      <div class="prod-precio" style="font-size:${esPizza ? '11px' : '13px'}">${precioLabel}</div>
+      ${esPizza ? '<div style="font-size:10px;color:var(--dorado);font-weight:600;">Elegir tamaño →</div>' : ''}
+      ${!esPizza && sinStock ? '<div style="font-size:10px;color:var(--rojo);font-weight:700;">SIN STOCK</div>' : ''}
+      ${!esPizza && stockBajo && !sinStock ? `<div style="font-size:10px;color:var(--dorado);font-weight:700;">Stock: ${stockNum}</div>` : ''}
+    </div>
+  `;
+  }).join('');
+}
+
+function agregarAlCarrito(id) {
+  const prod = getProductos().find(p => p.id === id);
+  if (!prod) return;
+  // Pizzas: mostrar selector de tamaño
+  if (prod.categoria === 'Pizzas' && prod.precios) {
+    abrirModalTamano(prod);
+    return;
+  }
+  // Extras y otros: agregar directo
+  const ex = carrito.find(i => i.cartId === id);
+  if (ex) {
+    ex.qty++;
+  } else {
+    carrito.push({ cartId: id, id: prod.id, nombre: prod.nombre, precio: Number(prod.precio), iva: Number(prod.iva || 1), qty: 1, icono: prod.icono || iconoCat(prod.categoria), categoria: prod.categoria });
+  }
+  renderCarrito();
+  showToast(`✓ ${prod.nombre} agregado`);
+}
+
+const TAMANOS = [
+  { key: 'p',  label: 'Pequeña',     emoji: '🍕' },
+  { key: 'm',  label: 'Mediana',     emoji: '🍕' },
+  { key: 'g',  label: 'Grande',      emoji: '🍕' },
+  { key: 'xl', label: 'Extra Grande',emoji: '🍕' },
+];
+
+function abrirModalTamano(prod) {
+  document.getElementById('modal-tamano-titulo').textContent = prod.nombre;
+  document.getElementById('modal-tamano-desc').textContent = prod.descripcion || 'Selecciona el tamaño';
+  const precios = prod.precios;
+  const opciones = TAMANOS.filter(t => precios[t.key] > 0);
+  document.getElementById('tamano-opciones').innerHTML = opciones.map(t => `
+    <div class="tamano-btn" onclick="agregarPizzaConTamano('${prod.id}', '${t.key}')">
+      <span class="t-emoji">${prod.icono || '🍕'}</span>
+      <span class="t-nombre">${t.label}</span>
+      <span class="t-precio">${fmtColones(precios[t.key])}</span>
+    </div>
+  `).join('');
+  document.getElementById('modal-tamano').classList.add('open');
+}
+
+function agregarPizzaConTamano(prodId, tamanoKey) {
+  const prod = getProductos().find(p => p.id === prodId);
+  if (!prod) return;
+  const tamano = TAMANOS.find(t => t.key === tamanoKey);
+  const precio = prod.precios[tamanoKey];
+  const cartId = prodId + '_' + tamanoKey;
+  const ex = carrito.find(i => i.cartId === cartId);
+  if (ex) {
+    ex.qty++;
+  } else {
+    carrito.push({
+      cartId,
+      id: prod.id,
+      nombre: `${prod.nombre} (${tamano.label})`,
+      precio,
+      iva: Number(prod.iva || 1),
+      qty: 1,
+      icono: prod.icono || '🍕',
+      categoria: prod.categoria,
+      tamano: tamano.label
+    });
+  }
+  cerrarModal('modal-tamano');
+  renderCarrito();
+  showToast(`✓ ${prod.nombre} ${tamano.label}`);
+}
+
+function cambiarCantidad(cartId, delta) {
+  const item = carrito.find(i => i.cartId === cartId);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) carrito = carrito.filter(i => i.cartId !== cartId);
+  renderCarrito();
+}
+
+function eliminarDelCarrito(cartId) {
+  carrito = carrito.filter(i => i.cartId !== cartId);
+  renderCarrito();
+}
+
+function limpiarCarrito() {
+  if (carrito.length && !confirm('¿Limpiar la orden actual?')) return;
+  carrito = [];
+  document.getElementById('pos-cliente').value = '';
+  document.getElementById('pos-cedula').value = '';
+  document.getElementById('pos-telefono').value = '';
+  document.getElementById('desc-valor').value = '';
+  document.getElementById('efectivo-recibido').value = '';
+  // FIX: resetear método de pago al estado inicial
+  metodoPago = 'efectivo';
+  document.querySelectorAll('.pago-opt').forEach(o => o.classList.remove('selected'));
+  const efectivoOpt = document.querySelector('.pago-opt[onclick*="efectivo"]');
+  if (efectivoOpt) efectivoOpt.classList.add('selected');
+  document.getElementById('efectivo-panel').style.display = 'block';
+  renderCarrito();
+}
+
+function renderCarrito() {
+  const div = document.getElementById('carrito-items');
+  // Actualizar badge del nav
+  const badge = document.getElementById('nav-cart-badge');
+  const totalItems = carrito.reduce((s, i) => s + i.qty, 0);
+  if (badge) {
+    badge.textContent = totalItems;
+    badge.classList.toggle('visible', totalItems > 0);
+  }
+  if (!carrito.length) {
+    div.innerHTML = '<div class="carrito-vacio"><div class="icon">🍕</div><div>Agregue productos<br>a la orden</div></div>';
+    actualizarTotales();
+    return;
+  }
+  div.innerHTML = carrito.map(item => `
+    <div class="carrito-item" style="flex-wrap:wrap;">
+      <div style="font-size:18px;">${item.icono}</div>
+      <div class="carrito-item-name" style="min-width:0;">
+        ${item.nombre}
+        ${item.iva == 1 ? '<span style="font-size:10px;color:#aaa;display:block;">IVA incl.</span>' : ''}
+        <input class="item-nota-input" type="text" placeholder="Nota: sin cebolla, bien cocido…" value="${item.nota || ''}" oninput="actualizarNota('${item.cartId}', this.value)" maxlength="60">
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="cambiarCantidad('${item.cartId}', -1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn" onclick="cambiarCantidad('${item.cartId}', 1)">+</button>
+      </div>
+      <div class="carrito-item-price">${fmtColones(item.precio * item.qty)}</div>
+      <button class="btn-icon" style="background:none;color:#ddd;" onclick="eliminarDelCarrito('${item.cartId}')">✕</button>
+    </div>
+  `).join('');
+  actualizarTotales();
+}
+
+function actualizarTotales() {
+  let subtotalNeto = 0, ivaTotal = 0;
+  carrito.forEach(item => {
+    const total = item.precio * item.qty;
+    if (item.iva == 1) {
+      const neto = total / 1.13;
+      subtotalNeto += neto;
+      ivaTotal += total - neto;
+    } else if (item.iva > 0) {
+      const neto = total / (1 + Number(item.iva));
+      subtotalNeto += neto;
+      ivaTotal += total - neto;
+    } else {
+      subtotalNeto += total;
+    }
+  });
+  const desc = getDescuento(subtotalNeto + ivaTotal);
+  const total = Math.max(0, subtotalNeto + ivaTotal - desc);
+  _lastTotal = total;
+  document.getElementById('total-subtotal').textContent = fmtColones(subtotalNeto);
+  document.getElementById('total-iva').textContent = fmtColones(ivaTotal);
+  document.getElementById('total-descuento').textContent = '-' + fmtColones(desc);
+  document.getElementById('total-final').textContent = fmtColones(total);
+  calcularVuelto();
+  return { subtotalNeto, ivaTotal, desc, total };
+}
+
+function getDescuento(base) {
+  const val = parseFloat(document.getElementById('desc-valor').value) || 0;
+  const tipo = document.getElementById('desc-tipo').value;
+  if (tipo === 'porcent') return base * (val / 100);
+  return val;
+}
+
+function recalcular() { actualizarTotales(); }
+
+// FIX: use stored numeric value instead of parsing formatted DOM text (locale-safe)
+let _lastTotal = 0;
+function calcularVuelto() {
+  if (metodoPago !== 'efectivo') return;
+  const recibido = parseFloat(document.getElementById('efectivo-recibido').value) || 0;
+  const vuelto = recibido - _lastTotal;
+  document.getElementById('vuelto-val').textContent = fmtColones(Math.max(0, vuelto));
+  document.getElementById('vuelto-val').style.color = vuelto < 0 ? 'var(--rojo)' : 'var(--verde)';
+  actualizarSplit();
+}
+
+// ─── SPLIT BILL ───
+let splitNum = 2;
+function toggleSplit() {
+  const panel = document.getElementById('split-panel');
+  panel.classList.toggle('visible');
+  actualizarSplit();
+}
+function changeSplit(d) {
+  splitNum = Math.max(2, splitNum + d);
+  document.getElementById('split-num').textContent = splitNum;
+  actualizarSplit();
+}
+function actualizarSplit() {
+  const panel = document.getElementById('split-panel');
+  if (!panel.classList.contains('visible')) return;
+  document.getElementById('split-result').textContent = fmtColones(_lastTotal / splitNum) + ' c/u';
+}
+
+// ─── NOTA DE ÍTEM ───
+function actualizarNota(cartId, val) {
+  const item = carrito.find(i => i.cartId === cartId);
+  if (item) item.nota = val;
+}
+
+function selectPago(tipo, el) {
+  metodoPago = tipo;
+  document.querySelectorAll('.pago-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('efectivo-panel').style.display = tipo === 'efectivo' ? 'block' : 'none';
+}
+
+function handleScannerKey(e) {
+  if (e.key === 'Enter') buscarCodigoBarras();
+}
+
+function buscarCodigoBarras() {
+  const codigo = document.getElementById('scanner-input').value.trim();
+  if (!codigo) return;
+  const prod = getProductos().find(p => p.codigo === codigo || p.sku === codigo);
+  if (prod) {
+    agregarAlCarrito(prod.id);
+    document.getElementById('scanner-input').value = '';
+    document.getElementById('scanner-input').focus();
+  } else {
+    showToast('⚠️ Producto no encontrado: ' + codigo, true);
+    document.getElementById('scanner-input').select();
+  }
+}
+
+function procesarVenta() {
+  if (!carrito.length) { showToast('⚠️ Agregue al menos un producto', true); return; }
+  const tots = actualizarTotales();
+  // FIX: validar monto recibido en efectivo
+  if (metodoPago === 'efectivo') {
+    const recibido = parseFloat(document.getElementById('efectivo-recibido').value) || 0;
+    if (recibido > 0 && recibido < tots.total) {
+      showToast('⚠️ El monto recibido es menor al total', true);
+      return;
+    }
+  }
+  const conf = getConfig();
+  const numFactura = getNextFacturaNum();
+  const cliente = document.getElementById('pos-cliente').value || 'Consumidor Final';
+  const cedula = document.getElementById('pos-cedula').value;
+  const telefono = document.getElementById('pos-telefono').value;
+  const venta = {
+    id: 'v_' + Date.now(),
+    numFactura,
+    codigoFactura: conf.prefijo + String(numFactura).padStart(5, '0'),
+    fecha: new Date().toISOString(),
+    cliente, cedula, telefono,
+    mesa: mesaActiva || null,
+    items: carrito.map(i => ({ ...i })),
+    subtotalNeto: tots.subtotalNeto,
+    iva: tots.ivaTotal,
+    descuento: tots.desc,
+    total: tots.total,
+    metodoPago,
+    estado: 'pagada'
+  };
+  const ventas = getVentas();
+  ventas.push(venta);
+  setVentas(ventas);
+  // Actualizar stock
+  const prods = getProductos();
+  carrito.forEach(item => {
+    const p = prods.find(x => x.id === item.id);
+    if (p && p.stock !== undefined && p.stock !== '') p.stock = Math.max(0, Number(p.stock) - item.qty);
+  });
+  setProductos(prods);
+  // Liberar mesa si estaba asignada
+  if (mesaActiva) {
+    const mesas = getMesas();
+    const m = mesas.find(x => x.num === mesaActiva);
+    if (m) { m.ocupada = false; m.orden = null; m.desde = null; }
+    setMesas(mesas);
+    mesaActiva = null;
+    document.getElementById('mesa-asignada-tag').style.display = 'none';
+  }
+  showFactura(venta);
+  limpiarCarrito();
+  showToast('✅ Venta registrada: ' + venta.codigoFactura);
+}
+
+// ═══════════════════════════════════════════════════════
+//                   FACTURA IMPRIMIBLE
+// ═══════════════════════════════════════════════════════
+function showFactura(venta) {
+  const conf = getConfig();
+  const html = `
+    <div id="factura-contenido" style="font-family:'Montserrat',sans-serif;padding:28px;max-width:400px;margin:0 auto;">
+      <div style="text-align:center;margin-bottom:20px;border-bottom:2px solid #1E2D24;padding-bottom:16px;">
+        <div style="font-family:'Playfair Display',serif;font-size:32px;color:#1E2D24;font-weight:900;">VERA</div>
+        <div style="font-size:13px;color:#C4432D;font-weight:700;letter-spacing:2px;">PIZZA</div>
+        <div style="font-size:10px;color:#888;margin-top:4px;letter-spacing:1px;">MASA MADRE, SABOR QUE SE SIENTE</div>
+        ${conf.direccion ? `<div style="font-size:11px;color:#666;margin-top:6px;">${conf.direccion}</div>` : ''}
+        ${conf.telefono ? `<div style="font-size:11px;color:#666;">Tel: ${conf.telefono}</div>` : ''}
+        ${conf.cedula ? `<div style="font-size:11px;color:#666;">Cédula: ${conf.cedula}</div>` : ''}
+      </div>
+
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:16px;">
+        <div>
+          <div style="font-weight:700;font-size:14px;color:#1E2D24;">FACTURA</div>
+          <div style="color:#C4432D;font-weight:700;">${venta.codigoFactura}</div>
+        </div>
+        <div style="text-align:right;font-size:11px;color:#666;">
+          <div>${fmtFecha(venta.fecha)}</div>
+          <div style="margin-top:4px;">Pago: ${venta.metodoPago.toUpperCase()}</div>
+          ${venta.mesa ? `<div style="margin-top:4px;font-weight:700;color:#1E2D24;">Mesa ${venta.mesa}</div>` : ''}
+        </div>
+      </div>
+
+      <div style="font-size:11px;margin-bottom:16px;padding:10px;background:#f8f6f0;border-radius:8px;">
+        <div style="font-weight:700;color:#1E2D24;margin-bottom:4px;">Cliente</div>
+        <div>${venta.cliente}</div>
+        ${venta.cedula ? `<div>Cédula: ${venta.cedula}</div>` : ''}
+        ${venta.telefono ? `<div>Tel: ${venta.telefono}</div>` : ''}
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;">
+        <thead>
+          <tr style="background:#1E2D24;color:#F2ECE3;">
+            <th style="padding:8px 6px;text-align:left;">Producto</th>
+            <th style="padding:8px 6px;text-align:center;">Cant.</th>
+            <th style="padding:8px 6px;text-align:right;">Precio</th>
+            <th style="padding:8px 6px;text-align:right;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${venta.items.map(item => `
+            <tr style="border-bottom:1px solid #f0ece0;">
+              <td style="padding:7px 6px;">
+                ${item.nombre}
+                ${item.iva == 1 ? '<span style="font-size:9px;color:#aaa;display:block;">IVA incl.</span>' : ''}
+                ${item.nota ? `<span style="font-size:9px;color:#C4432D;display:block;font-style:italic;">★ ${item.nota}</span>` : ''}
+              </td>
+              <td style="padding:7px 6px;text-align:center;">${item.qty}</td>
+              <td style="padding:7px 6px;text-align:right;">${fmtColones(item.precio)}</td>
+              <td style="padding:7px 6px;text-align:right;font-weight:600;">${fmtColones(item.precio * item.qty)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div style="border-top:2px solid #1E2D24;padding-top:12px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+          <span style="color:#666;">Subtotal (sin IVA)</span>
+          <span>${fmtColones(venta.subtotalNeto)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+          <span style="color:#666;">IVA 13%</span>
+          <span>${fmtColones(venta.iva)}</span>
+        </div>
+        ${venta.descuento > 0 ? `
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+          <span style="color:#666;">Descuento</span>
+          <span style="color:#C4432D;">-${fmtColones(venta.descuento)}</span>
+        </div>` : ''}
+        <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:700;font-family:'Playfair Display',serif;color:#1E2D24;margin-top:8px;padding-top:8px;border-top:1px solid #e8e0d4;">
+          <span>TOTAL</span>
+          <span style="color:#C4432D;">${fmtColones(venta.total)}</span>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:20px;padding-top:16px;border-top:1px solid #e8e0d4;font-size:10px;color:#aaa;line-height:1.6;">
+        <div style="color:#D4A35A;font-size:12px;font-weight:600;margin-bottom:4px;">✦ ✦ ✦</div>
+        <div>${conf.mensaje}</div>
+        <div style="margin-top:6px;">@laverapizza</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('print-area').innerHTML = html;
+  document.getElementById('modal-factura').classList.add('open');
+}
+
+function imprimirFactura() {
+  window.print();
+}
+
+// ═══════════════════════════════════════════════════════
+//                   HISTORIAL
+// ═══════════════════════════════════════════════════════
+function renderHistorial() {
+  const ventas = getVentas();
+  const desde = document.getElementById('filtro-desde').value;
+  const hasta = document.getElementById('filtro-hasta').value;
+  const pago = document.getElementById('filtro-pago').value;
+  const buscar = (document.getElementById('filtro-buscar').value || '').toLowerCase();
+
+  let filtradas = ventas.filter(v => {
+    const fecha = v.fecha.split('T')[0];
+    if (desde && fecha < desde) return false;
+    if (hasta && fecha > hasta) return false;
+    if (pago && v.metodoPago !== pago) return false;
+    if (buscar && !v.cliente.toLowerCase().includes(buscar) && !v.codigoFactura.toLowerCase().includes(buscar)) return false;
+    return true;
+  }).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+
+  const tbody = document.getElementById('tabla-historial');
+  if (!filtradas.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#bbb;padding:30px;">No hay ventas con esos filtros</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtradas.map(v => `
+    <tr class="${v.estado === 'anulada' ? 'row-anulada' : ''}">
+      <td><strong>${v.codigoFactura}</strong></td>
+      <td>${fmtFecha(v.fecha)}</td>
+      <td>${v.cliente}</td>
+      <td style="text-align:center;">${v.items.length}</td>
+      <td>${fmtColones(v.subtotalNeto)}</td>
+      <td>${fmtColones(v.iva)}</td>
+      <td><strong style="color:var(--rojo);">${fmtColones(v.total)}</strong></td>
+      <td><span class="badge ${v.metodoPago === 'efectivo' ? 'badge-verde' : v.metodoPago === 'tarjeta' ? 'badge-dorado' : 'badge-gris'}">${v.metodoPago}</span></td>
+      <td><span class="badge badge-verde">${v.estado || 'pagada'}</span></td>
+      <td>
+        <button class="btn btn-sm btn-outline" onclick="verFactura('${v.id}')" title="Ver">👁️</button>
+        <button class="btn btn-sm btn-outline" onclick="imprimirVenta('${v.id}')" title="Imprimir">🖨️</button>
+        <button class="btn btn-sm" style="background:var(--rojo);color:white;padding:6px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;" onclick="anularVenta('${v.id}')" title="Anular">✕</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function verFactura(id) {
+  const venta = getVentas().find(v => v.id === id);
+  if (venta) showFactura(venta);
+}
+
+function imprimirVenta(id) {
+  const venta = getVentas().find(v => v.id === id);
+  if (!venta) return;
+  showFactura(venta);
+  setTimeout(() => window.print(), 400);
+}
+
+function anularVenta(id) {
+  if (!confirm('⚠️ ¿Anular esta venta?\n\nEsta acción marca la venta como anulada y no se puede revertir.')) return;
+  const ventas = getVentas().map(v => v.id === id ? {...v, estado:'anulada'} : v);
+  setVentas(ventas);
+  renderHistorial();
+  showToast('Venta anulada');
+}
+
+function limpiarFiltros() {
+  document.getElementById('filtro-desde').value = '';
+  document.getElementById('filtro-hasta').value = '';
+  document.getElementById('filtro-pago').value = '';
+  document.getElementById('filtro-buscar').value = '';
+  renderHistorial();
+}
+
+// ═══════════════════════════════════════════════════════
+//                   CATÁLOGO
+// ═══════════════════════════════════════════════════════
+function renderCatalogo(q) {
+  const buscar = (q || document.querySelector('#sec-catalogo input[type=text]')?.value || '').toLowerCase();
+  const catFiltro = document.getElementById('cat-filtro-cat')?.value || '';
+  let prods = getProductos().filter(p => {
+    const m = p.nombre.toLowerCase().includes(buscar) || (p.codigo||'').toLowerCase().includes(buscar);
+    const c = !catFiltro || p.categoria === catFiltro;
+    return m && c;
+  });
+  const tbody = document.getElementById('tabla-catalogo');
+  if (!prods.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#bbb;padding:30px;">No hay productos</td></tr>';
+    return;
+  }
+  tbody.innerHTML = prods.map(p => {
+    const esPizza = p.categoria === 'Pizzas' && p.precios;
+    const ivaLabel = p.iva == 1 ? '13%' : p.iva == 0 ? 'Exento' : '4%';
+    let precioCell = '', precioIvaCell = '';
+    if (esPizza) {
+      const vals = [p.precios.p, p.precios.m, p.precios.g, p.precios.xl].filter(v => v > 0);
+      precioCell = `<span style="font-size:12px;">₡${Math.min(...vals).toLocaleString('es-CR')} – ₡${Math.max(...vals).toLocaleString('es-CR')}</span>`;
+      precioIvaCell = '<span style="color:#aaa;font-size:11px;">Por tamaño</span>';
+    } else {
+      const tasaIva = p.iva == 1 ? 0.13 : (p.iva == 0 ? 0 : Number(p.iva));
+      precioCell = fmtColones(p.precio);
+      precioIvaCell = fmtColones(p.precio * (1 + tasaIva));
+    }
+    const stockNum = p.stock !== undefined && p.stock !== '' ? Number(p.stock) : null;
+    const stockMin = p.stockMin !== undefined && p.stockMin !== '' ? Number(p.stockMin) : null;
+    let stockBadge = esPizza ? '<span style="color:#aaa;font-size:11px;">—</span>' : '';
+    if (!esPizza) {
+      if (stockNum !== null) {
+        stockBadge = stockMin !== null && stockNum <= stockMin
+          ? `<span class="badge badge-rojo">${stockNum}</span>`
+          : `<span class="badge badge-verde">${stockNum}</span>`;
+      } else { stockBadge = '<span style="color:#bbb;">—</span>'; }
+    }
+    return `
+      <tr>
+        <td><code style="font-size:12px;background:#f5f0e8;padding:3px 8px;border-radius:5px;">${p.codigo || '—'}</code></td>
+        <td><strong>${p.icono || ''} ${p.nombre}</strong><br><span style="font-size:11px;color:#aaa;">${p.descripcion || ''}</span></td>
+        <td><span class="badge badge-gris">${p.categoria}</span></td>
+        <td>${precioCell}</td>
+        <td><span class="badge ${p.iva == 0 ? 'badge-gris' : 'badge-dorado'}">${ivaLabel}</span></td>
+        <td>${precioIvaCell}</td>
+        <td>${stockBadge}</td>
+        <td><span class="badge ${p.estado === 'inactivo' ? 'badge-rojo' : 'badge-verde'}">${p.estado || 'activo'}</span></td>
+        <td>
+          <button class="btn btn-sm btn-outline" onclick="editarProducto('${p.id}')">✏️</button>
+          <button class="btn btn-sm" style="background:var(--rojo);color:white;padding:6px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;" onclick="eliminarProducto('${p.id}')">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function poblarSelectCat() {
+  const cats = [...new Set(getProductos().map(p => p.categoria))];
+  const sel = document.getElementById('cat-filtro-cat');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Todas las categorías</option>' + cats.map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
+}
+
+function togglePizzaSizes(cat) {
+  const esPizza = cat === 'Pizzas';
+  document.getElementById('precio-unico-row').style.display = esPizza ? 'none' : '';
+  document.getElementById('precios-pizza-row').style.display = esPizza ? 'block' : 'none';
+  document.getElementById('stock-row').style.display = esPizza ? 'none' : '';
+}
+
+function abrirModalProducto() {
+  editandoProductoId = null;
+  document.getElementById('modal-prod-titulo').textContent = 'Nuevo Producto';
+  ['prod-id','prod-nombre','prod-codigo','prod-sku','prod-precio','prod-descripcion','prod-icono',
+   'prod-precio-p','prod-precio-m','prod-precio-g','prod-precio-xl'].forEach(f => {
+    const el = document.getElementById(f);
+    if (el) el.value = '';
+  });
+  document.getElementById('prod-iva').value = '1';
+  document.getElementById('prod-iva-pizza').value = '1';
+  document.getElementById('prod-estado').value = 'activo';
+  document.getElementById('prod-categoria').value = 'Pizzas';
+  togglePizzaSizes('Pizzas');
+  document.getElementById('modal-producto').classList.add('open');
+}
+
+function editarProducto(id) {
+  const p = getProductos().find(x => x.id === id);
+  if (!p) return;
+  editandoProductoId = id;
+  document.getElementById('modal-prod-titulo').textContent = 'Editar Producto';
+  document.getElementById('prod-id').value = p.id;
+  document.getElementById('prod-nombre').value = p.nombre;
+  document.getElementById('prod-codigo').value = p.codigo || '';
+  document.getElementById('prod-sku').value = p.sku || '';
+  document.getElementById('prod-descripcion').value = p.descripcion || '';
+  document.getElementById('prod-icono').value = p.icono || '';
+  document.getElementById('prod-estado').value = p.estado || 'activo';
+  document.getElementById('prod-categoria').value = p.categoria;
+  togglePizzaSizes(p.categoria);
+  if (p.categoria === 'Pizzas' && p.precios) {
+    document.getElementById('prod-precio-p').value = p.precios.p || '';
+    document.getElementById('prod-precio-m').value = p.precios.m || '';
+    document.getElementById('prod-precio-g').value = p.precios.g || '';
+    document.getElementById('prod-precio-xl').value = p.precios.xl || '';
+    document.getElementById('prod-iva-pizza').value = p.iva !== undefined ? String(p.iva) : '1';
+    document.getElementById('prod-precio').value = '';
+  } else {
+    document.getElementById('prod-precio').value = p.precio || '';
+    document.getElementById('prod-iva').value = p.iva !== undefined ? String(p.iva) : '1';
+    document.getElementById('prod-stock').value = p.stock !== undefined ? p.stock : '';
+    document.getElementById('prod-stock-min').value = p.stockMin !== undefined ? p.stockMin : '';
+  }
+  document.getElementById('modal-producto').classList.add('open');
+}
+
+function guardarProducto() {
+  const nombre = document.getElementById('prod-nombre').value.trim();
+  if (!nombre) { showToast('⚠️ El nombre es obligatorio', true); return; }
+  const categoria = document.getElementById('prod-categoria').value;
+  const esPizza = categoria === 'Pizzas';
+  const codigo = document.getElementById('prod-codigo').value.trim();
+  if (codigo) {
+    const existing = getProductos().find(p => p.codigo === codigo && p.id !== editandoProductoId);
+    if (existing) { showToast('⚠️ Ya existe un producto con ese código: ' + existing.nombre, true); return; }
+  }
+  let prod = {
+    id: editandoProductoId || ('p_' + Date.now()),
+    nombre,
+    codigo,
+    sku: document.getElementById('prod-sku').value.trim(),
+    categoria,
+    descripcion: document.getElementById('prod-descripcion').value.trim(),
+    icono: document.getElementById('prod-icono').value.trim(),
+    estado: document.getElementById('prod-estado').value,
+  };
+  if (esPizza) {
+    const p = Number(document.getElementById('prod-precio-p').value) || 0;
+    const m = Number(document.getElementById('prod-precio-m').value) || 0;
+    const g = Number(document.getElementById('prod-precio-g').value) || 0;
+    const xl = Number(document.getElementById('prod-precio-xl').value) || 0;
+    if (!p && !m && !g && !xl) { showToast('⚠️ Ingrese al menos un precio de tamaño', true); return; }
+    prod.precios = { p, m, g, xl };
+    prod.iva = document.getElementById('prod-iva-pizza').value;
+    prod.precio = Math.min(...[p,m,g,xl].filter(v=>v>0)); // precio base para reportes
+    prod.stock = '';
+  } else {
+    const precio = parseFloat(document.getElementById('prod-precio').value);
+    if (isNaN(precio) || precio < 0) { showToast('⚠️ Precio inválido', true); return; }
+    prod.precio = precio;
+    prod.iva = document.getElementById('prod-iva').value;
+    prod.stock = document.getElementById('prod-stock').value !== '' ? Number(document.getElementById('prod-stock').value) : '';
+    prod.stockMin = document.getElementById('prod-stock-min').value !== '' ? Number(document.getElementById('prod-stock-min').value) : '';
+  }
+  const prods = getProductos();
+  if (editandoProductoId) {
+    const idx = prods.findIndex(p => p.id === editandoProductoId);
+    prods[idx] = prod;
+    showToast('✅ Producto actualizado');
+  } else {
+    prods.push(prod);
+    showToast('✅ Producto agregado');
+  }
+  setProductos(prods);
+  cerrarModal('modal-producto');
+  renderCatalogo();
+  poblarSelectCat();
+}
+
+function eliminarProducto(id) {
+  if (!confirm('¿Eliminar este producto?')) return;
+  setProductos(getProductos().filter(p => p.id !== id));
+  renderCatalogo();
+  showToast('Producto eliminado');
+}
+
+// ═══════════════════════════════════════════════════════
+//                   CLIENTES
+// ═══════════════════════════════════════════════════════
+function renderClientes(q) {
+  const buscar = (q || '').toLowerCase();
+  const clientes = getClientes().filter(c => !buscar || c.nombre.toLowerCase().includes(buscar) || (c.cedula||'').includes(buscar));
+  const ventas = getVentas();
+  const tbody = document.getElementById('tabla-clientes');
+  if (!clientes.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#bbb;padding:30px;">No hay clientes</td></tr>';
+    return;
+  }
+  tbody.innerHTML = clientes.map(c => {
+    const vsCli = ventas.filter(v => v.cedula === c.cedula || v.cliente === c.nombre);
+    const totalCom = vsCli.reduce((s,v) => s + v.total, 0);
+    return `
+      <tr>
+        <td><code style="font-size:12px;background:#f5f0e8;padding:3px 8px;border-radius:5px;">${c.cedula || '—'}</code></td>
+        <td><strong>${c.nombre}</strong></td>
+        <td>${c.telefono || '—'}</td>
+        <td>${c.email || '—'}</td>
+        <td><span class="badge badge-gris">${c.tipo || 'fisica'}</span></td>
+        <td style="text-align:center;">${vsCli.length}</td>
+        <td><strong style="color:var(--rojo);">${fmtColones(totalCom)}</strong></td>
+        <td>
+          <button class="btn btn-sm btn-outline" onclick="editarCliente('${c.id}')">✏️</button>
+          <button class="btn btn-sm" style="background:var(--rojo);color:white;padding:6px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;" onclick="eliminarCliente('${c.id}')">🗑️</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function abrirModalCliente() {
+  editandoClienteId = null;
+  document.getElementById('modal-cli-titulo').textContent = 'Nuevo Cliente';
+  ['cli-id','cli-nombre','cli-cedula','cli-telefono','cli-email','cli-direccion','cli-notas'].forEach(f => document.getElementById(f).value = '');
+  document.getElementById('cli-tipo').value = 'fisica';
+  document.getElementById('cli-provincia').value = 'San José';
+  document.getElementById('modal-cliente').classList.add('open');
+}
+
+function editarCliente(id) {
+  const c = getClientes().find(x => x.id === id);
+  if (!c) return;
+  editandoClienteId = id;
+  document.getElementById('modal-cli-titulo').textContent = 'Editar Cliente';
+  document.getElementById('cli-id').value = c.id;
+  document.getElementById('cli-nombre').value = c.nombre;
+  document.getElementById('cli-cedula').value = c.cedula || '';
+  document.getElementById('cli-telefono').value = c.telefono || '';
+  document.getElementById('cli-email').value = c.email || '';
+  document.getElementById('cli-direccion').value = c.direccion || '';
+  document.getElementById('cli-notas').value = c.notas || '';
+  document.getElementById('cli-tipo').value = c.tipo || 'fisica';
+  document.getElementById('cli-provincia').value = c.provincia || 'San José';
+  document.getElementById('modal-cliente').classList.add('open');
+}
+
+function guardarCliente() {
+  const nombre = document.getElementById('cli-nombre').value.trim();
+  if (!nombre) { showToast('⚠️ El nombre es obligatorio', true); return; }
+  const clientes = getClientes();
+  const cli = {
+    id: editandoClienteId || ('c_' + Date.now()),
+    nombre, cedula: document.getElementById('cli-cedula').value.trim(),
+    telefono: document.getElementById('cli-telefono').value.trim(),
+    email: document.getElementById('cli-email').value.trim(),
+    direccion: document.getElementById('cli-direccion').value.trim(),
+    notas: document.getElementById('cli-notas').value.trim(),
+    tipo: document.getElementById('cli-tipo').value,
+    provincia: document.getElementById('cli-provincia').value
+  };
+  if (editandoClienteId) {
+    const idx = clientes.findIndex(c => c.id === editandoClienteId);
+    clientes[idx] = cli;
+    showToast('✅ Cliente actualizado');
+  } else {
+    clientes.push(cli);
+    showToast('✅ Cliente registrado');
+  }
+  setClientes(clientes);
+  cerrarModal('modal-cliente');
+  renderClientes();
+}
+
+function eliminarCliente(id) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  setClientes(getClientes().filter(c => c.id !== id));
+  renderClientes();
+  showToast('Cliente eliminado');
+}
+
+function buscarClienteModal() {
+  document.getElementById('modal-buscar-cliente').classList.add('open');
+  // FIX: poblar lista después de que el modal sea visible
+  setTimeout(() => filtrarClientesBusqueda(''), 50);
+}
+
+function filtrarClientesBusqueda(q) {
+  const clientes = getClientes().filter(c => !q || c.nombre.toLowerCase().includes(q.toLowerCase()) || (c.cedula||'').includes(q));
+  const div = document.getElementById('lista-clientes-busqueda');
+  if (!clientes.length) { div.innerHTML = '<div style="text-align:center;color:#bbb;padding:20px;">No hay clientes registrados</div>'; return; }
+  div.innerHTML = clientes.map(c => `
+    <div onclick="seleccionarCliente('${c.id}')" style="padding:12px 16px;border-bottom:1px solid #f0ece0;cursor:pointer;border-radius:8px;transition:background 0.15s;" onmouseover="this.style.background='#faf8f4'" onmouseout="this.style.background=''">
+      <div style="font-weight:600;font-size:14px;">${c.nombre}</div>
+      <div style="font-size:12px;color:#888;">${c.cedula ? 'Cédula: '+c.cedula+' | ' : ''}${c.telefono || ''}</div>
+    </div>
+  `).join('');
+}
+
+function seleccionarCliente(id) {
+  const c = getClientes().find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('pos-cliente').value = c.nombre;
+  document.getElementById('pos-cedula').value = c.cedula || '';
+  document.getElementById('pos-telefono').value = c.telefono || '';
+  cerrarModal('modal-buscar-cliente');
+  showToast('Cliente seleccionado: ' + c.nombre);
+}
+
+
+// ─── ALERTAS DE STOCK BAJO ───
+function renderAlertasStock() {
+  const prods = getProductos().filter(p => {
+    if (p.estado === 'inactivo') return false;
+    const stockNum = p.stock !== undefined && p.stock !== '' ? Number(p.stock) : null;
+    const stockMin = p.stockMin !== undefined && p.stockMin !== '' ? Number(p.stockMin) : 5;
+    return stockNum !== null && stockNum <= stockMin;
+  });
+  const banner = document.getElementById('stock-alert-banner');
+  const list = document.getElementById('stock-alert-list');
+  if (!banner || !list) return;
+  if (!prods.length) { banner.classList.remove('visible'); return; }
+  banner.classList.add('visible');
+  list.innerHTML = prods.map(p => `
+    <div class="stock-alert-chip">
+      ${p.icono || '📦'} ${p.nombre}
+      <span style="background:var(--rojo);color:white;border-radius:8px;padding:1px 6px;font-size:10px;">${p.stock}</span>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//                   DASHBOARD
+// ═══════════════════════════════════════════════════════
+function renderDashboard() {
+  renderAlertasStock();
+  const ventas = getVentas();
+  const hoy = new Date().toISOString().split('T')[0];
+  const mes = new Date().toISOString().substring(0, 7);
+  const ventasHoy = ventas.filter(v => v.fecha.startsWith(hoy) && v.estado !== 'anulada');
+  const ventasMes = ventas.filter(v => v.fecha.startsWith(mes) && v.estado !== 'anulada');
+  document.getElementById('stat-ventas-hoy').textContent = ventasHoy.length;
+  document.getElementById('stat-ingresos-hoy').textContent = fmtColones(ventasHoy.reduce((s,v) => s + v.subtotalNeto, 0));
+  document.getElementById('stat-iva-hoy').textContent = fmtColones(ventasHoy.reduce((s,v) => s + v.iva, 0));
+  document.getElementById('stat-mes').textContent = fmtColones(ventasMes.reduce((s,v) => s + v.total, 0));
+
+  // Recientes
+  const recientes = [...ventas].sort((a,b) => new Date(b.fecha)-new Date(a.fecha)).slice(0,8);
+  const divRec = document.getElementById('dash-recientes');
+  if (!recientes.length) { divRec.innerHTML = '<div style="text-align:center;color:#bbb;padding:30px;">No hay ventas aún</div>'; }
+  else {
+    divRec.innerHTML = recientes.map(v => `
+      <div class="venta-rec">
+        <div class="venta-rec-num">${v.codigoFactura}</div>
+        <div class="venta-rec-info">
+          <div class="venta-rec-cliente">${v.cliente}</div>
+          <div class="venta-rec-hora">${fmtFecha(v.fecha)} · ${v.metodoPago}</div>
+        </div>
+        <div class="venta-rec-total">${fmtColones(v.total)}</div>
+        <span class="badge ${v.estado === 'anulada' ? 'badge-rojo' : 'badge-verde'}" style="font-size:10px;">${v.estado || 'pagada'}</span>
+      </div>
+    `).join('');
+  }
+
+  // Top productos
+  const conteo = {};
+  ventas.filter(v => v.estado !== 'anulada').forEach(v => v.items.forEach(i => {
+    conteo[i.nombre] = (conteo[i.nombre] || 0) + i.qty;
+  }));
+  const top = Object.entries(conteo).sort((a,b) => b[1]-a[1]).slice(0,6);
+  const divTop = document.getElementById('dash-top-productos');
+  if (!top.length) { divTop.innerHTML = '<div style="text-align:center;color:#bbb;padding:30px;">No hay datos aún</div>'; }
+  else {
+    const max = top[0][1];
+    divTop.innerHTML = top.map(([nombre, qty]) => `
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+          <span style="font-weight:500;">${nombre}</span>
+          <span style="color:var(--rojo);font-weight:700;">${qty} uds.</span>
+        </div>
+        <div style="background:#f0ece0;border-radius:8px;height:8px;overflow:hidden;">
+          <div style="background:var(--rojo);height:100%;border-radius:8px;width:${(qty/max*100).toFixed(0)}%;transition:width 0.6s;"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//                   REPORTES
+// ═══════════════════════════════════════════════════════
+function renderReportes() {
+  const ventas = getVentas().filter(v => v.estado !== 'anulada');
+  document.getElementById('rep-total-facturas').textContent = ventas.length;
+  const ingresos = ventas.reduce((s,v) => s + v.subtotalNeto, 0);
+  const iva = ventas.reduce((s,v) => s + v.iva, 0);
+  document.getElementById('rep-ingresos').textContent = fmtColones(ingresos);
+  document.getElementById('rep-iva').textContent = fmtColones(iva);
+  document.getElementById('rep-ticket').textContent = ventas.length ? fmtColones(ventas.reduce((s,v)=>s+v.total,0)/ventas.length) : '₡0';
+
+  // Por método de pago
+  const pagos = {};
+  ventas.forEach(v => { pagos[v.metodoPago] = (pagos[v.metodoPago] || 0) + v.total; });
+  const totalPagos = Object.values(pagos).reduce((a,b)=>a+b,0) || 1;
+  document.getElementById('rep-pago-breakdown').innerHTML = Object.entries(pagos).map(([p,t]) => `
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+        <span style="font-weight:600;text-transform:capitalize;">${p}</span>
+        <span>${fmtColones(t)} <span style="color:#aaa;">(${(t/totalPagos*100).toFixed(0)}%)</span></span>
+      </div>
+      <div style="background:#f0ece0;border-radius:8px;height:10px;overflow:hidden;">
+        <div style="background:var(--verde);height:100%;border-radius:8px;width:${(t/totalPagos*100).toFixed(0)}%;"></div>
+      </div>
+    </div>
+  `).join('') || '<div style="color:#bbb;text-align:center;padding:20px;">Sin datos</div>';
+
+  // Por categoría
+  const cats = {};
+  ventas.forEach(v => v.items.forEach(i => { cats[i.categoria] = (cats[i.categoria] || 0) + i.precio*i.qty; }));
+  const totalCats = Object.values(cats).reduce((a,b)=>a+b,0) || 1;
+  document.getElementById('rep-cat-breakdown').innerHTML = Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,t]) => `
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;">
+        <span style="font-weight:600;">${iconoCat(c)} ${c}</span>
+        <span>${fmtColones(t)} <span style="color:#aaa;">(${(t/totalCats*100).toFixed(0)}%)</span></span>
+      </div>
+      <div style="background:#f0ece0;border-radius:8px;height:10px;overflow:hidden;">
+        <div style="background:var(--dorado);height:100%;border-radius:8px;width:${(t/totalCats*100).toFixed(0)}%;"></div>
+      </div>
+    </div>
+  `).join('') || '<div style="color:#bbb;text-align:center;padding:20px;">Sin datos</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+//                   EXPORTAR
+// ═══════════════════════════════════════════════════════
+function exportarCSV() {
+  const ventas = getVentas();
+  const rows = [
+    ['N° Factura','Fecha','Cliente','Cédula','Teléfono','Método Pago','Subtotal Neto','IVA','Descuento','Total','Estado','Productos']
+  ];
+  ventas.forEach(v => rows.push([
+    v.codigoFactura,
+    fmtFecha(v.fecha),
+    v.cliente, v.cedula || '', v.telefono || '',
+    v.metodoPago,
+    (v.subtotalNeto || 0).toFixed(2),
+    (v.iva || 0).toFixed(2),
+    (v.descuento||0).toFixed(2),
+    (v.total || 0).toFixed(2),
+    v.estado || 'pagada',
+    v.items.map(i => `${i.qty}x ${i.nombre}`).join('; ')
+  ]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  descargar('LaVeraPizza_Ventas_' + new Date().toISOString().split('T')[0] + '.csv', 'text/csv', csv);
+  showToast('✅ CSV exportado');
+}
+
+function exportarExcel() {
+  const ventas = getVentas();
+  let html = `<table><thead><tr>
+    <th>N° Factura</th><th>Fecha</th><th>Cliente</th><th>Cédula</th><th>Teléfono</th>
+    <th>Método Pago</th><th>Subtotal Neto</th><th>IVA 13%</th><th>Descuento</th><th>Total</th><th>Estado</th><th>Productos</th>
+  </tr></thead><tbody>`;
+  ventas.forEach(v => {
+    html += `<tr>
+      <td>${v.codigoFactura}</td><td>${fmtFecha(v.fecha)}</td>
+      <td>${v.cliente}</td><td>${v.cedula||''}</td><td>${v.telefono||''}</td>
+      <td>${v.metodoPago}</td>
+      <td>${(v.subtotalNeto||0).toFixed(2)}</td><td>${(v.iva||0).toFixed(2)}</td>
+      <td>${(v.descuento||0).toFixed(2)}</td><td>${(v.total||0).toFixed(2)}</td>
+      <td>${v.estado||'pagada'}</td>
+      <td>${v.items.map(i=>`${i.qty}x ${i.nombre}`).join(', ')}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  const blob = new Blob(['\uFEFF', `<html><head><meta charset="UTF-8"><style>table{border-collapse:collapse}td,th{border:1px solid #ddd;padding:6px 10px;font-family:Arial;font-size:12px}th{background:#1E2D24;color:#F2ECE3;}</style></head><body>${html}</body></html>`], {type:'application/vnd.ms-excel'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = 'LaVeraPizza_Ventas_' + new Date().toISOString().split('T')[0] + '.xls';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('✅ Excel exportado');
+}
+
+function exportarReporteContable() {
+  const ventas = getVentas().filter(v => v.estado !== 'anulada');
+  const rows = [['N° Factura','Fecha','Cliente','Cédula','Subtotal sin IVA','IVA 13%','Descuento','Total','Método de Pago']];
+  ventas.forEach(v => rows.push([
+    v.codigoFactura, fmtFecha(v.fecha), v.cliente, v.cedula||'',
+    (v.subtotalNeto||0).toFixed(2), (v.iva||0).toFixed(2), (v.descuento||0).toFixed(2), (v.total||0).toFixed(2), v.metodoPago
+  ]));
+  const totalSub = ventas.reduce((s,v)=>s+(v.subtotalNeto||0),0);
+  const totalIva = ventas.reduce((s,v)=>s+(v.iva||0),0);
+  const totalTotal = ventas.reduce((s,v)=>s+(v.total||0),0);
+  rows.push([]);
+  rows.push(['TOTALES','','','',totalSub.toFixed(2),totalIva.toFixed(2),'',totalTotal.toFixed(2),'']);
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  descargar('LaVeraPizza_ReporteIVA_' + new Date().toISOString().split('T')[0] + '.csv', 'text/csv', csv);
+  showToast('✅ Reporte IVA exportado');
+}
+
+function descargar(nombre, tipo, contenido) {
+  const blob = new Blob([contenido], { type: tipo + ';charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function exportarTodosDatos() {
+  const datos = {
+    productos: getProductos(),
+    ventas: getVentas(),
+    clientes: getClientes(),
+    config: getConfig(),
+    exportado: new Date().toISOString()
+  };
+  descargar('LaVeraPizza_Backup_' + new Date().toISOString().split('T')[0] + '.json', 'application/json', JSON.stringify(datos, null, 2));
+  showToast('✅ Backup exportado');
+}
+
+function importarDatos() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const datos = JSON.parse(ev.target.result);
+        if (confirm(`¿Importar datos? Esto reemplazará los datos actuales.\nProductos: ${datos.productos?.length || 0}, Ventas: ${datos.ventas?.length || 0}, Clientes: ${datos.clientes?.length || 0}`)) {
+          if (datos.productos) setProductos(datos.productos);
+          if (datos.ventas) setVentas(datos.ventas);
+          if (datos.clientes) setClientes(datos.clientes);
+          if (datos.config) setConfig(datos.config);
+          showToast('✅ Datos importados correctamente');
+          cargarConfig();
+        }
+      } catch { showToast('⚠️ Archivo inválido', true); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function confirmarBorrarDatos() {
+  if (prompt('Escriba BORRAR para confirmar la eliminación de todos los datos:') === 'BORRAR') {
+    localStorage.removeItem('lvp_productos');
+    localStorage.removeItem('lvp_ventas');
+    localStorage.removeItem('lvp_clientes');
+    localStorage.removeItem('lvp_config');
+    localStorage.removeItem('lvp_mesas');
+    // FIX: recargar datos demo y re-renderizar todo
+    cargarDatosDemo();
+    renderDashboard();
+    renderCatalogo();
+    renderHistorial();
+    renderClientes();
+    cargarConfig();
+    showToast('Todos los datos han sido borrados');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//                   CONFIGURACIÓN
+// ═══════════════════════════════════════════════════════
+function cargarConfig() {
+  const conf = getConfig();
+  document.getElementById('conf-nombre').value = conf.nombre || '';
+  document.getElementById('conf-cedula').value = conf.cedula || '';
+  document.getElementById('conf-direccion').value = conf.direccion || '';
+  document.getElementById('conf-telefono').value = conf.telefono || '';
+  document.getElementById('conf-email').value = conf.email || '';
+  document.getElementById('conf-mensaje').value = conf.mensaje || '';
+  document.getElementById('conf-iva').value = conf.iva || 13;
+  document.getElementById('conf-moneda').value = conf.moneda || 'CRC';
+  document.getElementById('conf-num-inicial').value = conf.numInicial || 1;
+  document.getElementById('conf-prefijo').value = conf.prefijo || 'LVP-';
+  document.getElementById('conf-actividad').value = conf.actividad || '';
+  document.getElementById('conf-tipo-cont').value = conf.tipoCont || 'Persona Jurídica';
+}
+
+function guardarConfig() {
+  const conf = {
+    nombre: document.getElementById('conf-nombre').value,
+    cedula: document.getElementById('conf-cedula').value,
+    direccion: document.getElementById('conf-direccion').value,
+    telefono: document.getElementById('conf-telefono').value,
+    email: document.getElementById('conf-email').value,
+    mensaje: document.getElementById('conf-mensaje').value,
+    iva: Number(document.getElementById('conf-iva').value),
+    moneda: document.getElementById('conf-moneda').value,
+    numInicial: Number(document.getElementById('conf-num-inicial').value),
+    prefijo: document.getElementById('conf-prefijo').value,
+    actividad: document.getElementById('conf-actividad').value,
+    tipoCont: document.getElementById('conf-tipo-cont').value
+  };
+  setConfig(conf);
+}
+
+// ═══════════════════════════════════════════════════════
+//                   MODALES
+// ═══════════════════════════════════════════════════════
+function cerrarModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) cerrarModal(m.id); });
+});
+
+// ═══════════════════════════════════════════════════════
+//                   TOAST
+// ═══════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, error = false, warning = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  let cls = 'show';
+  if (error) cls += ' error';
+  else if (warning) cls += ' warning';
+  t.className = cls;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3500);
+}
+
+// ═══════════════════════════════════════════════════════
+//                   DATOS DEMO
+// ═══════════════════════════════════════════════════════
+function cargarDatosDemo() {
+  if (!getData('lvp_config', null)) {
+    setConfig({
+      nombre: 'La Vera Pizza', cedula: '3-101-XXXXXX', direccion: 'Heredia, Costa Rica',
+      telefono: '2XXX-XXXX', email: 'info@laverapizza.com',
+      iva: 13, moneda: 'CRC', numInicial: 1, prefijo: 'LVP-',
+      mensaje: '¡Gracias por su visita! Masa Madre, Sabor que se Siente.',
+      actividad: '5610 - Restaurantes', tipoCont: 'Persona Jurídica'
+    });
+  }
+  if (getProductos().length) return;
+  const P = { p: 3000, m: 4500, g: 9000, xl: 12000 };
+  const prods = [
+    // ── PIZZAS ──
+    { id:'piz1', nombre:'Peperoni',         sku:'PIZ-001', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'Clásica, intensa y llena de sabor. (Salsa de tomate, mozzarella, pepperoni)', estado:'activo', precios:{...P}, stock:'' },
+    { id:'piz2', nombre:'Jamón',            sku:'PIZ-002', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'Simple, tradicional y siempre deliciosa. (Salsa de tomate, mozzarella, jamón)', estado:'activo', precios:{...P}, stock:'' },
+    { id:'piz3', nombre:'Margarita',        sku:'PIZ-003', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'La esencia de lo auténtico. (Salsa de tomate, mozzarella, albahaca fresca)', estado:'activo', precios:{...P}, stock:'' },
+    { id:'piz4', nombre:'Hawaiana',         sku:'PIZ-004', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'Dulce, salada y tropical. (Salsa de tomate, mozzarella, jamón, piña)', estado:'activo', precios:{...P}, stock:'' },
+    { id:'piz5', nombre:'Tocineta y Hongos',sku:'PIZ-005', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'Ahumada, jugosa y llena de carácter. (Salsa de tomate, mozzarella, tocineta, hongos)', estado:'activo', precios:{...P}, stock:'' },
+    { id:'piz6', nombre:'Vegetariana',      sku:'PIZ-006', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'Fresca, colorida y saludable. (Salsa de tomate, mozzarella, pimientos, cebolla, hongos, aceitunas)', estado:'activo', precios:{...P}, stock:'' },
+    { id:'piz7', nombre:'Pollo',            sku:'PIZ-007', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'Suave, jugosa y muy sabrosa. (Salsa de tomate, mozzarella, pollo, cebolla)', estado:'activo', precios:{...P}, stock:'' },
+    { id:'piz8', nombre:'Carne Mechada',    sku:'PIZ-008', precio:3000, iva:'1', categoria:'Pizzas', icono:'🍕', descripcion:'Nuestra versión local, para chuparse los dedos. (Salsa de tomate, mozzarella, carne mechada, cebolla)', estado:'activo', precios:{...P}, stock:'' },
+    // ── EXTRAS ──
+    { id:'ext1', nombre:'Calzone',                    sku:'EXT-001', precio:3000, iva:'1', categoria:'Extras', icono:'🥙', descripcion:'', estado:'activo', stock:'' },
+    { id:'ext2', nombre:'Flauta de Pollo',            sku:'EXT-002', precio:2500, iva:'1', categoria:'Extras', icono:'🌯', descripcion:'', estado:'activo', stock:'' },
+    { id:'ext3', nombre:'Flauta de Chorizo',          sku:'EXT-003', precio:2500, iva:'1', categoria:'Extras', icono:'🌯', descripcion:'', estado:'activo', stock:'' },
+    { id:'ext4', nombre:'Pan de Mantequilla de Ajo y Queso', sku:'EXT-004', precio:2500, iva:'1', categoria:'Extras', icono:'🥖', descripcion:'', estado:'activo', stock:'' },
+    { id:'ext5', nombre:'Focaccia de Salmón',         sku:'EXT-005', precio:5000, iva:'1', categoria:'Extras', icono:'🍞', descripcion:'', estado:'activo', stock:'' },
+    { id:'ext6', nombre:'Focaccia de Frutos Rojos',   sku:'EXT-006', precio:5000, iva:'1', categoria:'Extras', icono:'🍞', descripcion:'', estado:'activo', stock:'' },
+    { id:'ext7', nombre:'Focaccia Cinnamon',          sku:'EXT-007', precio:5000, iva:'1', categoria:'Extras', icono:'🍞', descripcion:'', estado:'activo', stock:'' },
+  ];
+  setProductos(prods);
+}
+
+// ═══════════════════════════════════════════════════════
+//                   MESAS
+// ═══════════════════════════════════════════════════════
+let mesaActiva = null;
+let mesaTimers = {};
+
+function getMesas() {
+  const stored = getData('lvp_mesas', null);
+  if (stored) return stored;
+  // Default: 10 mesas
+  return Array.from({length:10}, (_,i) => ({ num: i+1, ocupada: false, orden: null, desde: null }));
+}
+function setMesas(m) { setData('lvp_mesas', m); }
+
+function renderMesas() {
+  const mesas = getMesas();
+  document.getElementById('mesas-count').textContent = mesas.length;
+  const grid = document.getElementById('mesas-grid');
+  if (!grid) return;
+  grid.innerHTML = mesas.map(m => {
+    let timerTxt = '';
+    if (m.ocupada && m.desde) {
+      const mins = Math.floor((Date.now() - new Date(m.desde)) / 60000);
+      timerTxt = `<div class="mesa-timer">${mins}min</div>`;
+    }
+    return `
+      <div class="mesa-btn ${m.ocupada ? 'ocupada' : ''}" onclick="seleccionarMesaPanel(${m.num})">
+        <div class="mesa-num">${m.num}</div>
+        <div class="mesa-label">${m.ocupada ? 'Ocupada' : 'Libre'}</div>
+        ${timerTxt}
+        ${m.ocupada ? '<div class="mesa-badge">●</div>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function seleccionarMesaPanel(num) {
+  const mesas = getMesas();
+  const m = mesas.find(x => x.num === num);
+  if (!m) return;
+  const card = document.getElementById('mesa-detalle-card');
+  card.style.display = 'block';
+  document.getElementById('mesa-detalle-titulo').textContent = `Mesa ${num}`;
+  card.dataset.mesaNum = num;
+  let info = `<div style="font-size:13px;color:#666;padding:8px 0;">`;
+  if (m.ocupada) {
+    const mins = m.desde ? Math.floor((Date.now() - new Date(m.desde)) / 60000) : 0;
+    info += `<div>Estado: <strong style="color:var(--rojo);">Ocupada</strong></div>`;
+    info += `<div>Tiempo: <strong>${mins} minutos</strong></div>`;
+    if (m.orden) info += `<div>Última orden: <strong>${m.orden}</strong></div>`;
+  } else {
+    info += `<div>Estado: <strong style="color:var(--verde);">Libre</strong></div>`;
+  }
+  info += `</div>`;
+  document.getElementById('mesa-detalle-info').innerHTML = info;
+  // Highlight
+  document.querySelectorAll('.mesa-btn').forEach(b => b.classList.remove('seleccionada'));
+  document.querySelectorAll('.mesa-btn')[num-1]?.classList.add('seleccionada');
+}
+
+function irAVentaMesa() {
+  const card = document.getElementById('mesa-detalle-card');
+  const num = parseInt(card.dataset.mesaNum);
+  mesaActiva = num;
+  const mesas = getMesas();
+  const m = mesas.find(x => x.num === num);
+  if (m && !m.ocupada) {
+    m.ocupada = true;
+    m.desde = new Date().toISOString();
+    setMesas(mesas);
+  }
+  document.getElementById('mesa-asignada-label').textContent = `Mesa ${num}`;
+  document.getElementById('mesa-asignada-tag').style.display = 'block';
+  showSection('nueva-venta', document.querySelector('[data-section=nueva-venta]'));
+  showToast(`🪑 Mesa ${num} asignada a la orden`);
+}
+
+function liberarMesa() {
+  const card = document.getElementById('mesa-detalle-card');
+  const num = parseInt(card.dataset.mesaNum);
+  if (!confirm(`¿Liberar Mesa ${num}?`)) return;
+  const mesas = getMesas();
+  const m = mesas.find(x => x.num === num);
+  if (m) { m.ocupada = false; m.orden = null; m.desde = null; }
+  setMesas(mesas);
+  renderMesas();
+  document.getElementById('mesa-detalle-card').style.display = 'none';
+  showToast(`Mesa ${num} liberada`);
+}
+
+function desasignarMesa() {
+  mesaActiva = null;
+  document.getElementById('mesa-asignada-tag').style.display = 'none';
+}
+
+function configurarMesas() {
+  const actual = getMesas().length;
+  const n = parseInt(prompt('¿Cuántas mesas desea configurar? (1-30)', actual));
+  if (isNaN(n) || n < 1 || n > 30) return;
+  const current = getMesas();
+  const nuevas = Array.from({length:n}, (_,i) => {
+    const ex = current.find(m => m.num === i+1);
+    return ex || { num: i+1, ocupada: false, orden: null, desde: null };
+  });
+  setMesas(nuevas);
+  renderMesas();
+  showToast(`✅ ${n} mesas configuradas`);
+}
+
+// Actualizar timers de mesas cada minuto
+setInterval(() => {
+  const sec = document.getElementById('sec-mesas');
+  if (sec && sec.classList.contains('active')) renderMesas();
+}, 60000);
+
+// ═══════════════════════════════════════════════════════
+//                   ATAJOS DE TECLADO
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', function(e) {
+  // No interferir si hay un modal abierto o input enfocado (excepto scanner)
+  const active = document.activeElement;
+  const isTyping = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT') && active.id !== 'scanner-input';
+  if (isTyping) return;
+  if (e.key === 'F9') { e.preventDefault(); procesarVenta(); }
+  if (e.key === 'F2') { e.preventDefault(); showSection('nueva-venta', document.querySelector('[data-section=nueva-venta]')); document.getElementById('scanner-input')?.focus(); }
+  if (e.key === 'F3') { e.preventDefault(); showSection('historial', document.querySelector('[data-section=historial]')); }
+  if (e.key === 'F4') { e.preventDefault(); showSection('mesas', document.querySelector('[data-section=mesas]')); }
+  if (e.key === 'Escape') {
+    const openModal = document.querySelector('.modal-overlay.open');
+    if (openModal) cerrarModal(openModal.id);
+  }
+});
+
+
+// Migración: limpiar productos de menú anterior si pertenecen a categorías viejas
+(function() {
+  const prods = getData('lvp_productos', []);
+  const tieneViejos = prods.some(p => ['Bebidas','Postres','Combos','Entradas','Otros'].includes(p.categoria));
+  if (tieneViejos) localStorage.removeItem('lvp_productos');
+})();
+
+cargarDatosDemo();
+renderDashboard();
+cargarConfig();
+
+// Focus en scanner al abrir nueva venta
+document.querySelector('[data-section=nueva-venta]').addEventListener('click', () => {
+  setTimeout(() => {
+    const s = document.getElementById('scanner-input');
+    if (s) s.focus();
+  }, 150);
+});
+</script>
+</body>
+</html>

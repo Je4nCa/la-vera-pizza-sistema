@@ -104,18 +104,38 @@ export interface Cajero {
 
 // ─── Config del negocio ──────────────────────────────────────────────────────
 export interface ConfigNegocio {
-  id:          ID           // siempre 'config'
-  nombre:      string
-  cedula:      string
-  direccion:   string
-  telefono:    string
-  email:       string
-  mensaje:     string
-  iva:         number
-  moneda:      'CRC' | 'USD'
-  numInicial:  number
-  prefijo:     string
-  actividad:   string
-  tipoCont:    string
-  numMesas:    number
+  id:            ID           // siempre 'config'
+  nombre:        string
+  cedula:        string
+  direccion:     string
+  telefono:      string
+  email:         string
+  mensaje:       string
+  iva:           number
+  moneda:        'CRC' | 'USD'
+  numInicial:    number
+  prefijo:       string
+  actividad:     string
+  tipoCont:      string
+  numMesas:      number
+  sinpeNumero?:  string
+  sinpeNombre?:  string
+}
+
+// ─── Turno / Cierre de caja ───────────────────────────────────────────────────
+export type EstadoTurno = 'abierto' | 'cerrado'
+
+export interface Turno {
+  id:            ID
+  cajeroId:      string
+  cajeroNombre:  string
+  apertura:      string        // ISO
+  cierre:        string | null // ISO
+  estado:        EstadoTurno
+  totalEfectivo: number
+  totalTarjeta:  number
+  totalSinpe:    number
+  totalGeneral:  number
+  numVentas:     number
+  notas:         string
 }

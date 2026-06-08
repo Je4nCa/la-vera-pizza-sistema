@@ -10,23 +10,26 @@ import { Button } from '@/components/ui/button'
 import type { ConfigNegocio, Cajero } from '@/types'
 
 type FormConfig = {
-  nombre:     string
-  cedula:     string
-  direccion:  string
-  telefono:   string
-  email:      string
-  mensaje:    string
-  iva:        string
-  prefijo:    string
-  actividad:  string
-  tipoCont:   string
-  numMesas:   string
+  nombre:       string
+  cedula:       string
+  direccion:    string
+  telefono:     string
+  email:        string
+  mensaje:      string
+  iva:          string
+  prefijo:      string
+  actividad:    string
+  tipoCont:     string
+  numMesas:     string
+  sinpeNumero:  string
+  sinpeNombre:  string
 }
 
 const DEFAULT: FormConfig = {
   nombre: 'La Vera Pizza', cedula: '', direccion: '', telefono: '', email: '',
   mensaje: '¡Gracias por su preferencia! Masa Madre, Sabor que se Siente.',
   iva: '13', prefijo: 'FV', actividad: '561101', tipoCont: '02', numMesas: '10',
+  sinpeNumero: '', sinpeNombre: '',
 }
 
 export default function Configuracion() {
@@ -49,11 +52,13 @@ export default function Configuracion() {
       telefono:  cfg.telefono   ?? '',
       email:     cfg.email      ?? '',
       mensaje:   cfg.mensaje    ?? '',
-      iva:       String(cfg.iva ?? 13),
-      prefijo:   cfg.prefijo    ?? 'FV',
-      actividad: cfg.actividad  ?? '561101',
-      tipoCont:  cfg.tipoCont   ?? '02',
-      numMesas:  String(cfg.numMesas ?? 10),
+      iva:         String(cfg.iva ?? 13),
+      prefijo:     cfg.prefijo    ?? 'FV',
+      actividad:   cfg.actividad  ?? '561101',
+      tipoCont:    cfg.tipoCont   ?? '02',
+      numMesas:    String(cfg.numMesas ?? 10),
+      sinpeNumero: cfg.sinpeNumero ?? '',
+      sinpeNombre: cfg.sinpeNombre ?? '',
     })
   }, [cfg])
 
@@ -73,7 +78,9 @@ export default function Configuracion() {
         prefijo:   form.prefijo,
         actividad: form.actividad,
         tipoCont:  form.tipoCont,
-        numMesas:  Number(form.numMesas) || 10,
+        numMesas:    Number(form.numMesas) || 10,
+        sinpeNumero: form.sinpeNumero,
+        sinpeNombre: form.sinpeNombre,
         moneda:    'CRC' as const,
         numInicial: cfg?.numInicial ?? 1,
       }
@@ -228,6 +235,21 @@ export default function Configuracion() {
             <div>
               <label className={labelCls}>Número de mesas</label>
               <input type="number" min="1" max="50" className={fieldCls} value={form.numMesas} onChange={(e) => upd('numMesas', e.target.value)} />
+            </div>
+          </div>
+
+          {/* SINPE */}
+          <div className="border-t border-border pt-4">
+            <label className={labelCls + ' mb-3 block'}>SINPE Móvil</label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={labelCls}>Número de teléfono</label>
+                <input className={fieldCls} value={form.sinpeNumero} onChange={(e) => upd('sinpeNumero', e.target.value)} placeholder="8888-8888" />
+              </div>
+              <div>
+                <label className={labelCls}>Nombre del titular</label>
+                <input className={fieldCls} value={form.sinpeNombre} onChange={(e) => upd('sinpeNombre', e.target.value)} placeholder="Nombre asociado" />
+              </div>
             </div>
           </div>
 

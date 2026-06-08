@@ -1,6 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom'
-import { Menu, Plus } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Menu, Plus, Sun, Moon } from 'lucide-react'
 import Sidebar from './Sidebar'
 import ToastContainer from './Toast'
 import { useUIStore } from '@/store'
@@ -16,10 +15,11 @@ const PAGE_TITLES: Record<string, string> = {
   '/clientes':      'Clientes',
   '/reportes':      'Reportes',
   '/configuracion': 'Configuración',
+  '/cierre-caja':   'Cierre de Caja',
 }
 
 export default function Layout() {
-  const { toggleSidebar } = useUIStore()
+  const { toggleSidebar, darkMode, toggleDark } = useUIStore()
   const location = useLocation()
   const navigate = useNavigate()
   const title = PAGE_TITLES[location.pathname] ?? 'La Vera Pizza'
@@ -43,7 +43,7 @@ export default function Layout() {
 
       <div className="md:ml-[220px] min-h-screen flex flex-col">
         {/* Topbar */}
-        <header className="sticky top-0 z-50 bg-white border-b border-border shadow-sm flex items-center justify-between px-6 py-4">
+        <header className="no-print sticky top-0 z-50 bg-white border-b border-border shadow-sm flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <button
               onClick={toggleSidebar}
@@ -53,10 +53,18 @@ export default function Layout() {
             </button>
             <h1 className="font-serif text-[22px] text-primary">{title}</h1>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden sm:block bg-[#F2ECE3] text-primary border border-border rounded-full px-3.5 py-1 text-xs font-medium">
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:block bg-secondary text-primary border border-border rounded-full px-3.5 py-1 text-xs font-medium">
               {fecha}
             </span>
+            {/* Toggle modo oscuro */}
+            <button
+              onClick={toggleDark}
+              className="p-2 rounded-xl hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+              title={darkMode ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {darkMode ? <Sun size={16}/> : <Moon size={16}/>}
+            </button>
             <Button size="sm" onClick={() => navigate('/nueva-venta')}>
               <Plus size={14} /> Nueva Venta
             </Button>

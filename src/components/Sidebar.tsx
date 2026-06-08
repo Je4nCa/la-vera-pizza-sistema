@@ -5,17 +5,18 @@ import { useUIStore, useCarritoStore, useCajeroStore } from '@/store'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, ShoppingCart, Grid2x2, ClipboardList,
-  Package, Users, BarChart2, Settings, LogOut, UserCircle2,
+  Package, Users, BarChart2, Settings, LogOut, UserCircle2, Lock,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-  { to: '/',              label: 'Dashboard',  icon: LayoutDashboard },
+  { to: '/',              label: 'Dashboard',   icon: LayoutDashboard },
   { to: '/nueva-venta',   label: 'Nueva Venta', icon: ShoppingCart },
   { to: '/mesas',         label: 'Mesas',       icon: Grid2x2 },
   { to: '/historial',     label: 'Historial',   icon: ClipboardList },
   { to: '/catalogo',      label: 'Catálogo',    icon: Package },
   { to: '/clientes',      label: 'Clientes',    icon: Users },
   { to: '/reportes',      label: 'Reportes',    icon: BarChart2 },
+  { to: '/cierre-caja',   label: 'Cierre Caja', icon: Lock },
   { to: '/configuracion', label: 'Config.',     icon: Settings },
 ]
 

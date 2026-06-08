@@ -10,10 +10,12 @@ interface Toast {
 interface UIStore {
   sidebarOpen: boolean
   toasts:      Toast[]
+  darkMode:    boolean
   setSidebarOpen: (v: boolean) => void
   toggleSidebar:  () => void
   showToast:      (mensaje: string, tipo?: Toast['tipo']) => void
   removeToast:    (id: string) => void
+  toggleDark:     () => void
 }
 
 export const useUIStore = create<UIStore>()(
@@ -21,6 +23,7 @@ export const useUIStore = create<UIStore>()(
     (set) => ({
       sidebarOpen: false,
       toasts:      [],
+      darkMode:    localStorage.getItem('theme') === 'dark',
 
       setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }, false, 'setSidebarOpen'),
       toggleSidebar:  ()            => set((s) => ({ sidebarOpen: !s.sidebarOpen }), false, 'toggleSidebar'),
@@ -34,6 +37,15 @@ export const useUIStore = create<UIStore>()(
 
       removeToast: (id) =>
         set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) }), false, 'removeToast'),
+
+      toggleDark: () =>
+        set((s) => {
+          const next = !s.darkMode
+          localStorage.setItem('theme', next ? 'dark' : 'light')
+          if (next) document.documentElement.classList.add('dark')
+          else      document.documentElement.classList.remove('dark')
+          return { darkMode: next }
+        }, false, 'toggleDark'),
     }),
     { name: 'ui' }
   )
