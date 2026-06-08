@@ -8,40 +8,45 @@ if (localStorage.getItem('theme') === 'dark') {
   document.documentElement.classList.add('dark')
 }
 
-// ─── Limpia IndexedDB de Firebase si quedó de una build con persistencia ───────
-// Esto se ejecuta UNA vez por usuario (gateado con localStorage).
-// Si no lo limpiamos, el SDK de Firestore ve el IDB antiguo y cada setDoc
-// queda colgado esperando sincronizar con ese cache — nunca resuelve la promesa.
-const IDB_CLEAN_KEY = 'fs_idb_clean_v5'
+// ─── Limpieza única del IndexedDB de Firestore ────────────────────────────────
+// Borra cualquier IDB antiguo de Firebase (de versiones previas con configs
+// rotas) antes de que el SDK se inicialice. Con la nueva config de
+// persistentSingleTabManager, el SDK creará su propio IDB limpio.
+// Clave v7 = primer boot con persistentSingleTabManager.
+const IDB_CLEAN_KEY = 'fs_idb_clean_v7'
 
 async function limpiarFirestoreIdb(): Promise<void> {
   if (localStorage.getItem(IDB_CLEAN_KEY)) return
   try {
     if ('databases' in indexedDB) {
-      const dbs = await (indexedDB as IDBFactory & { databases(): Promise<{ name?: string }[]> }).databases()
-      for (const { name } of dbs) {
-        if (name && (name.includes('firestore') || name.includes('firebase'))) {
-          await new Promise<void>((resolve) => {
-            const req = indexedDB.deleteDatabase(name)
-            req.onsuccess  = () => resolve()
-            req.onerror    = () => resolve()
-            req.onblocked  = () => resolve()
-          })
-        }
-      }
+      type IdbEntry = { name?: string }
+      const dbs: IdbEntry[] = await (indexedDB as unknown as {
+        databases(): Promise<IdbEntry[]>
+      }).databases()
+      await Promise.all(
+        dbs
+          .filter(({ name }) => name && (name.includes('firestore') || name.includes('firebase')))
+          .map(({ name }) =>
+            new Promise<void>((res) => {
+              const req = indexedDB.deleteDatabase(name!)
+              req.onsuccess = req.onerror = req.onblocked = () => res()
+            })
+          )
+      )
     }
   } catch {
-    // Si falla la limpieza, seguimos igual — mejor no bloquear el arranque
+    // Si falla la limpieza no bloqueamos el arranque
   } finally {
     localStorage.setItem(IDB_CLEAN_KEY, '1')
   }
 }
 
 async function bootstrap() {
+  // 1. Limpiar IDB viejo ANTES de que Firebase se inicialice
   await limpiarFirestoreIdb()
 
-  // Importamos App DESPUÉS de la limpieza para que Firebase se inicialice
-  // sobre un IndexedDB limpio
+  // 2. Importar App dinámicamente para que firebase.ts se evalúe
+  //    sobre un IndexedDB limpio
   const { default: App } = await import('@/App')
 
   createRoot(document.getElementById('root')!).render(
