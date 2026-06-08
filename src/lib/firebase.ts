@@ -1,5 +1,11 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore, collection, doc } from 'firebase/firestore'
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  collection,
+  doc,
+} from 'firebase/firestore'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
 const firebaseConfig = {
@@ -11,8 +17,15 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-export const firebaseApp    = initializeApp(firebaseConfig)
-export const firestore      = getFirestore(firebaseApp)
+export const firebaseApp = initializeApp(firebaseConfig)
+
+// Persistencia local: writes van al IndexedDB primero → se ven instantáneos
+export const firestore = initializeFirestore(firebaseApp, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+})
+
 export const auth           = getAuth(firebaseApp)
 export const googleProvider = new GoogleAuthProvider()
 
