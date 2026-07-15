@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { ordenesRepository } from '@/repositories'
@@ -21,19 +21,45 @@ export default function Ordenes() {
   const { showToast } = useUIStore()
   const hoy = isoFecha()
 
+  // Estado optimista: el <select> refleja el cambio al instante, sin esperar
+  // el viaje de ida y vuelta a Firestore. Se limpia solo cuando el snapshot
+  // real confirma el mismo valor (o se revierte si la escritura falla).
+  const [pendientes, setPendientes] = useState<Record<string, EstadoOrden>>({})
+
+  useEffect(() => {
+    if (!ordenes) return
+    setPendientes((prev) => {
+      if (Object.keys(prev).length === 0) return prev
+      let changed = false
+      const next = { ...prev }
+      for (const id of Object.keys(next)) {
+        const real = ordenes.find((o) => o.id === id)
+        if (!real || real.estado === next[id]) { delete next[id]; changed = true }
+      }
+      return changed ? next : prev
+    })
+  }, [ordenes])
+
+  function estadoDe(o: Orden): EstadoOrden {
+    return pendientes[o.id] ?? o.estado
+  }
+
   const activas = useMemo(() =>
     (ordenes ?? [])
-      .filter((o) => o.creadoEn.startsWith(hoy) && o.estado !== 'entregado')
+      .filter((o) => o.creadoEn.startsWith(hoy) && estadoDe(o) !== 'entregado')
       .sort((a, b) => new Date(b.creadoEn).getTime() - new Date(a.creadoEn).getTime()),
-    [ordenes, hoy]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [ordenes, hoy, pendientes]
   )
 
   async function cambiarEstado(o: Orden, estado: EstadoOrden) {
+    setPendientes((p) => ({ ...p, [o.id]: estado }))
     try {
       await ordenesRepository.actualizar(o.id, { estado, actualizadoEn: new Date().toISOString() })
     } catch (err) {
       console.error(err)
       showToast('Error al actualizar la orden', 'error')
+      setPendientes((p) => { const n = { ...p }; delete n[o.id]; return n })
     }
   }
 
@@ -90,7 +116,7 @@ export default function Ordenes() {
                 </div>
               </div>
               <select
-                value={o.estado}
+                value={estadoDe(o)}
                 onChange={(e) => cambiarEstado(o, e.target.value as EstadoOrden)}
                 className="border-2 border-[#D4A35A] rounded-lg px-3 py-2 text-xs font-semibold text-primary bg-secondary focus:outline-none shrink-0"
               >

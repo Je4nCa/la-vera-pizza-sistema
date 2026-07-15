@@ -10,10 +10,11 @@ if (localStorage.getItem('theme') === 'dark') {
 
 // ─── Limpieza única del IndexedDB de Firestore ────────────────────────────────
 // Borra cualquier IDB antiguo de Firebase (de versiones previas con configs
-// rotas o con un tabManager distinto) antes de que el SDK se inicialice.
-// Clave v8 = boot con persistentMultipleTabManager (antes: single-tab, que
-// rompía el tiempo real al abrir la Pantalla Cocina en otra pestaña).
-const IDB_CLEAN_KEY = 'fs_idb_clean_v8'
+// rotas o con un tabManager de persistencia) antes de que el SDK se inicialice.
+// Clave v9 = boot sin persistencia local (getFirestore simple). Los
+// tabManagers anteriores (single-tab, multiple-tab) dejaban IDB con
+// coordinación entre pestañas que causaba escrituras lentas/inconsistentes.
+const IDB_CLEAN_KEY = 'fs_idb_clean_v9'
 
 async function limpiarFirestoreIdb(): Promise<void> {
   if (localStorage.getItem(IDB_CLEAN_KEY)) return

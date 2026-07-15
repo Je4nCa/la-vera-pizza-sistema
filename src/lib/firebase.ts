@@ -1,14 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import {
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-  getFirestore,
-  enableNetwork,
-  collection,
-  doc,
-  type Firestore,
-} from 'firebase/firestore'
+import { getFirestore, enableNetwork, collection, doc } from 'firebase/firestore'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
 const firebaseConfig = {
@@ -22,30 +13,19 @@ const firebaseConfig = {
 
 export const firebaseApp = initializeApp(firebaseConfig)
 
-// ─── Firestore con persistencia multi-pestaña ─────────────────────────────────
-// El sistema abre varias pestañas del mismo origen a la vez a propósito
-// (Nueva Venta / Órdenes en el POS + Pantalla Cocina en una ventana aparte),
-// y todas necesitan recibir actualizaciones en tiempo real simultáneamente.
-// persistentSingleTabManager NO sirve para esto: solo la pestaña "dueña" del
-// IndexedDB recibe datos en vivo, y forceOwnership hace que cada pestaña
-// nueva le quite la propiedad a la anterior, dejándola congelada.
-// persistentMultipleTabManager sincroniza el cache entre todas las pestañas
-// abiertas del mismo navegador.
-function crearFirestore(): Firestore {
-  try {
-    return initializeFirestore(firebaseApp, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-      }),
-    })
-  } catch {
-    // Dev hot-reload: Firestore ya fue inicializado en este proceso
-    console.warn('[Firebase] Firestore ya inicializado — usando instancia existente')
-    return getFirestore(firebaseApp)
-  }
-}
-
-export const firestore = crearFirestore()
+// ─── Firestore sin persistencia local ─────────────────────────────────────────
+// El sistema abre varias pestañas del mismo origen a propósito (Nueva Venta /
+// Órdenes en el POS + Pantalla Cocina en una ventana aparte). onSnapshot ya
+// entrega tiempo real a cada pestaña de forma independiente hablando
+// directo con el servidor — no hace falta ningún tabManager para eso.
+//
+// Los tabManagers de persistencia (single o multiple) coordinan un cache
+// local en IndexedDB ENTRE pestañas antes de confirmar cada escritura, lo
+// cual agrega latencia variable y a veces bloqueos cuando hay varias
+// pestañas abiertas a la vez — justo el síntoma de "a veces tarda, a veces
+// no cambia" que reportó el negocio. Sin persistencia, cada escritura va
+// directo al servidor sin esa coordinación extra.
+export const firestore = getFirestore(firebaseApp)
 
 // Asegurar que la red esté activa por si quedó deshabilitada en una sesión previa
 enableNetwork(firestore).catch((e) => console.warn('[Firebase] enableNetwork:', e))
