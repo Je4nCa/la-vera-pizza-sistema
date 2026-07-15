@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app'
 import {
   initializeFirestore,
   persistentLocalCache,
-  persistentSingleTabManager,
+  persistentMultipleTabManager,
   getFirestore,
   enableNetwork,
   collection,
@@ -22,16 +22,20 @@ const firebaseConfig = {
 
 export const firebaseApp = initializeApp(firebaseConfig)
 
-// ─── Firestore con persistencia de una sola pestaña ───────────────────────────
-// persistentSingleTabManager: NO requiere SharedWorker (a diferencia de
-// MultipleTabManager). Los setDoc/updateDoc/deleteDoc resuelven INMEDIATAMENTE
-// desde el IndexedDB local y sincronizan con el servidor en background.
-// forceOwnership: true → toma el ownership del IDB aunque otra sesión lo tuviera.
+// ─── Firestore con persistencia multi-pestaña ─────────────────────────────────
+// El sistema abre varias pestañas del mismo origen a la vez a propósito
+// (Nueva Venta / Órdenes en el POS + Pantalla Cocina en una ventana aparte),
+// y todas necesitan recibir actualizaciones en tiempo real simultáneamente.
+// persistentSingleTabManager NO sirve para esto: solo la pestaña "dueña" del
+// IndexedDB recibe datos en vivo, y forceOwnership hace que cada pestaña
+// nueva le quite la propiedad a la anterior, dejándola congelada.
+// persistentMultipleTabManager sincroniza el cache entre todas las pestañas
+// abiertas del mismo navegador.
 function crearFirestore(): Firestore {
   try {
     return initializeFirestore(firebaseApp, {
       localCache: persistentLocalCache({
-        tabManager: persistentSingleTabManager({ forceOwnership: true }),
+        tabManager: persistentMultipleTabManager(),
       }),
     })
   } catch {
