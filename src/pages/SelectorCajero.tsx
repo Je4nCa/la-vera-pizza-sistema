@@ -21,9 +21,15 @@ export default function SelectorCajero() {
     }
   }, [cajeros])
 
+  // AdminJC es una cuenta de prueba/administración, no un cajero real —
+  // se excluye del grid principal para no confundir al personal
+  const ADMIN_NOMBRE = 'AdminJC'
+
   const activos = (cajeros ?? [])
-    .filter((c) => c.activo)
+    .filter((c) => c.activo && c.nombre !== ADMIN_NOMBRE)
     .sort((a, b) => a.nombre.localeCompare(b.nombre))
+
+  const admin = (cajeros ?? []).find((c) => c.nombre === ADMIN_NOMBRE)
 
   const cargando = cajeros === undefined
 
@@ -89,6 +95,16 @@ export default function SelectorCajero() {
         >
           <LogOut size={13} /> Cerrar sesión
         </button>
+
+        {/* Acceso de administración/prueba — discreto, separado de los cajeros reales */}
+        {admin && (
+          <button
+            onClick={() => setCajeroActivo(admin)}
+            className="mt-3 flex items-center gap-1.5 mx-auto text-[#F2ECE3]/15 text-[10px] hover:text-[#F2ECE3]/40 transition-colors"
+          >
+            <UserCircle2 size={11} /> Admin Prueba
+          </button>
+        )}
       </div>
     </div>
   )
