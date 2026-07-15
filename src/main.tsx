@@ -43,8 +43,14 @@ async function limpiarFirestoreIdb(): Promise<void> {
 }
 
 async function bootstrap() {
-  // 1. Limpiar IDB viejo ANTES de que Firebase se inicialice
-  await limpiarFirestoreIdb()
+  // 1. Limpiar IDB viejo ANTES de que Firebase se inicialice.
+  //    Con un timeout de seguridad: si indexedDB.databases()/deleteDatabase()
+  //    llegara a colgarse en algún navegador con estado corrupto, la app
+  //    igual debe arrancar — nunca dejar al usuario en blanco para siempre.
+  await Promise.race([
+    limpiarFirestoreIdb(),
+    new Promise<void>((res) => setTimeout(res, 3000)),
+  ])
 
   // 2. Importar App dinámicamente para que firebase.ts se evalúe
   //    sobre un IndexedDB limpio
