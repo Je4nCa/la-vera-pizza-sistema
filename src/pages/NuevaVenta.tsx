@@ -383,7 +383,9 @@ export default function NuevaVenta() {
     try {
       // Número de factura: usa config ya cargada + timestamp para evitar getDocs
       const numFactura    = Date.now()
-      const prefijo       = cfg?.prefijo ?? 'LVP'
+      // Se quita cualquier guión final que el usuario haya puesto en el
+      // prefijo de Configuración (ej. "LVP-") para no duplicarlo aquí
+      const prefijo       = (cfg?.prefijo ?? 'LVP').replace(/-+$/, '')
       const codigoFactura = `${prefijo}-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${String(numFactura).slice(-4)}`
 
       const venta: Venta = {
