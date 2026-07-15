@@ -1,7 +1,9 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
+import { Volume2, VolumeX } from 'lucide-react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { isoFecha, cn } from '@/lib/utils'
+import { desbloquearAudio, sonarOrdenLista } from '@/lib/sound'
 import type { Orden, EstadoOrden } from '@/types'
 
 const ESTADO_CONFIG: Record<EstadoOrden, {
@@ -27,7 +29,13 @@ const TICKER = [
 export default function PantallaCocina() {
   const ordenes = useCollection<Orden>(() => hCol('ordenes'))
   const [hora, setHora] = useState('')
+  const [audioListo, setAudioListo] = useState(false)
+  const [sonidoOn, setSonidoOn]     = useState(true)
   const hoy = isoFecha()
+
+  // Detecta transiciones de estado → "listo" para disparar el sonido
+  const estadosPrevios  = useRef<Map<string, EstadoOrden>>(new Map())
+  const primeraCarga    = useRef(true)
 
   useEffect(() => {
     const tick = () =>
@@ -36,6 +44,22 @@ export default function PantallaCocina() {
     const id = setInterval(tick, 1000)
     return () => clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    if (!ordenes) return
+    const anteriores = estadosPrevios.current
+    if (!primeraCarga.current && audioListo && sonidoOn) {
+      const huboNuevoListo = ordenes.some((o) => o.estado === 'listo' && anteriores.get(o.id) !== 'listo')
+      if (huboNuevoListo) sonarOrdenLista()
+    }
+    primeraCarga.current = false
+    estadosPrevios.current = new Map(ordenes.map((o) => [o.id, o.estado]))
+  }, [ordenes, audioListo, sonidoOn])
+
+  async function activarAudio() {
+    await desbloquearAudio()
+    setAudioListo(true)
+  }
 
   const visibles = useMemo(() =>
     (ordenes ?? [])
@@ -53,6 +77,20 @@ export default function PantallaCocina() {
           'radial-gradient(ellipse at 85% 75%, rgba(196,67,45,.05) 0%, transparent 55%)',
       }}
     >
+      {/* Overlay: activar audio (requiere un gesto del usuario en esta pantalla) */}
+      {!audioListo && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <button
+            onClick={activarAudio}
+            className="flex flex-col items-center gap-4 bg-[#D4A35A] hover:bg-[#c99548] text-[#1E2D24] rounded-3xl px-16 py-12 transition-colors shadow-2xl"
+          >
+            <Volume2 size={56} />
+            <span className="font-serif text-3xl font-black">Activar Sonido</span>
+            <span className="text-sm font-semibold opacity-70">Tocá para avisar con sonido cuando una orden esté lista</span>
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-[#222] px-14 py-5 flex items-center justify-between border-b-4 border-[#D4A35A] shrink-0">
         <div className="leading-none">
@@ -61,9 +99,20 @@ export default function PantallaCocina() {
           <div className="font-serif text-[#C4432D] text-xl font-bold tracking-[.18em] uppercase">— Pizza —</div>
         </div>
         <div className="font-serif text-[#D4A35A] text-4xl font-bold tracking-wide">{hora}</div>
-        <div className="text-right">
-          <div className="font-serif text-[#F2ECE3] text-2xl font-bold mb-1.5">Simple. Auténtica. Inolvidable.</div>
-          <div className="text-[#D4A35A] text-xs font-medium tracking-[.18em] uppercase">Masa madre, sabor que se siente</div>
+        <div className="flex items-center gap-5">
+          <div className="text-right">
+            <div className="font-serif text-[#F2ECE3] text-2xl font-bold mb-1.5">Simple. Auténtica. Inolvidable.</div>
+            <div className="text-[#D4A35A] text-xs font-medium tracking-[.18em] uppercase">Masa madre, sabor que se siente</div>
+          </div>
+          {audioListo && (
+            <button
+              onClick={() => setSonidoOn((v) => !v)}
+              className="text-[#F2ECE3]/50 hover:text-[#F2ECE3] transition-colors shrink-0"
+              title={sonidoOn ? 'Silenciar avisos' : 'Activar avisos'}
+            >
+              {sonidoOn ? <Volume2 size={22}/> : <VolumeX size={22}/>}
+            </button>
+          )}
         </div>
       </div>
 
