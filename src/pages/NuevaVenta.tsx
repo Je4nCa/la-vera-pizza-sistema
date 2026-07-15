@@ -4,7 +4,7 @@ import { hCol } from '@/lib/firebase'
 import { fmtColones } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useCarritoStore, useUIStore, useCajeroStore, calcularTotales } from '@/store'
-import { ventasRepository, mesasRepository } from '@/repositories'
+import { ventasRepository, mesasRepository, ordenesRepository } from '@/repositories'
 import { sinUndefined } from '@/lib/utils'
 import { nanoid } from 'nanoid'
 import {
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@/components/ui/button'
-import type { Producto, ItemVenta, MetodoPago, Venta, Mesa, ConfigNegocio } from '@/types'
+import type { Producto, ItemVenta, MetodoPago, Venta, Mesa, ConfigNegocio, Orden } from '@/types'
 
 const TAMANOS = [
   { key: 'p',  label: 'Pequeña',     abbr: 'P' },
@@ -384,6 +384,25 @@ export default function NuevaVenta() {
       if (mesaActiva !== null) {
         const mesaId = `mesa-${mesaActiva}`
         await mesasRepository.actualizar(mesaId, { ocupada: false, desde: null, orden: null })
+      }
+
+      // Generar orden para la pantalla de cocina (no bloquea la venta si falla)
+      try {
+        const detalleOrden = items.map((i) => `${i.nombre}${i.qty > 1 ? ` x${i.qty}` : ''}`).join(', ')
+        const orden: Orden = {
+          id:            nanoid(),
+          num:           String(numFactura).slice(-4),
+          ventaId:       venta.id,
+          cliente:       clienteNombre || 'Público General',
+          detalle:       detalleOrden,
+          mesa:          mesaActiva,
+          estado:        'recibida',
+          creadoEn:      new Date().toISOString(),
+          actualizadoEn: new Date().toISOString(),
+        }
+        await ordenesRepository.crear(sinUndefined(orden) as unknown as Orden)
+      } catch (err) {
+        console.error('Error al crear orden de cocina:', err)
       }
 
       limpiarCarrito()

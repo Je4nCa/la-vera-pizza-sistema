@@ -5,13 +5,14 @@ import { useUIStore, useCarritoStore, useCajeroStore } from '@/store'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, ShoppingCart, Grid2x2, ClipboardList,
-  Package, Users, BarChart2, Settings, LogOut, UserCircle2, Lock,
+  Package, Users, BarChart2, Settings, LogOut, UserCircle2, Lock, ChefHat,
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { to: '/',              label: 'Dashboard',   icon: LayoutDashboard },
   { to: '/nueva-venta',   label: 'Nueva Venta', icon: ShoppingCart },
   { to: '/mesas',         label: 'Mesas',       icon: Grid2x2 },
+  { to: '/ordenes',       label: 'Órdenes',     icon: ChefHat },
   { to: '/historial',     label: 'Historial',   icon: ClipboardList },
   { to: '/catalogo',      label: 'Catálogo',    icon: Package },
   { to: '/clientes',      label: 'Clientes',    icon: Users },

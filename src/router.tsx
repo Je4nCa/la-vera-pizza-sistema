@@ -9,15 +9,21 @@ import Clientes      from '@/pages/Clientes'
 import Reportes      from '@/pages/Reportes'
 import Configuracion from '@/pages/Configuracion'
 import CierreCaja    from '@/pages/CierreCaja'
+import Ordenes        from '@/pages/Ordenes'
+import PantallaCocina from '@/pages/PantallaCocina'
 
 export default function Router() {
   return (
     <HashRouter>
       <Routes>
+        {/* Pantalla de cocina: fullscreen, sin sidebar/topbar */}
+        <Route path="pantalla-cocina" element={<PantallaCocina />} />
+
         <Route element={<Layout />}>
           <Route index            element={<Dashboard />} />
           <Route path="nueva-venta"   element={<NuevaVenta />} />
           <Route path="mesas"         element={<Mesas />} />
+          <Route path="ordenes"       element={<Ordenes />} />
           <Route path="historial"     element={<Historial />} />
           <Route path="catalogo"      element={<Catalogo />} />
           <Route path="clientes"      element={<Clientes />} />
