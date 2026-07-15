@@ -122,6 +122,21 @@ export interface ConfigNegocio {
   sinpeNombre?:  string
 }
 
+// ─── Orden (pantalla de cocina) ───────────────────────────────────────────────
+export type EstadoOrden = 'recibida' | 'preparando' | 'horneando' | 'listo' | 'entregado'
+
+export interface Orden {
+  id:            ID
+  num:           string        // últimos dígitos de la factura, ej "4821"
+  ventaId:       string
+  cliente:       string
+  detalle:       string        // ej "Margherita x2, Pepperoni x1"
+  mesa:          number | null
+  estado:        EstadoOrden
+  creadoEn:      string
+  actualizadoEn: string
+}
+
 // ─── Turno / Cierre de caja ───────────────────────────────────────────────────
 export type EstadoTurno = 'abierto' | 'cerrado'
 

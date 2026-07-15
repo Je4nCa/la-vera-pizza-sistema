@@ -110,6 +110,13 @@
 }
 .animate-fade-in-up { animation: fadeInUp 0.22s ease; }
 
+/* Ticker de la pantalla de cocina */
+@keyframes laveraTicker {
+  from { transform: translateX(100vw); }
+  to   { transform: translateX(-100%); }
+}
+.animate-lavera-ticker { animation: laveraTicker 26s linear infinite; }
+
 /* ── Estilos de impresión (cierre de caja) ─────────────────── */
 @media print {
   .no-print { display: none !important; }
