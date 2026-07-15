@@ -67,7 +67,11 @@ export default function Ordenes() {
         </Button>
       </div>
 
-      {activas.length === 0 ? (
+      {ordenes === undefined ? (
+        <div className="bg-white border border-border rounded-xl py-16 text-center text-muted-foreground">
+          Cargando órdenes…
+        </div>
+      ) : activas.length === 0 ? (
         <div className="bg-white border border-border rounded-xl py-16 text-center text-muted-foreground">
           <ChefHat size={36} className="mx-auto mb-3 opacity-40" />
           No hay órdenes activas todavía

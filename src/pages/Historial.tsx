@@ -117,7 +117,9 @@ export default function Historial() {
       </div>
 
       {/* Lista */}
-      {filtradas.length === 0 ? (
+      {ventas === undefined ? (
+        <div className="text-center py-16 text-muted-foreground">Cargando ventas…</div>
+      ) : filtradas.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">No hay ventas con estos filtros</div>
       ) : (
         <div className="space-y-2">
