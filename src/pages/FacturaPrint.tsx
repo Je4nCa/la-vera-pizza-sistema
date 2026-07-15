@@ -81,7 +81,12 @@ export default function FacturaPrint() {
         className="shadow-lg print:shadow-none"
         style={{
           width: '80mm', padding: '4mm 3mm',
-          fontFamily: "'Courier New', monospace", fontSize: '11px', lineHeight: 1.45,
+          // "Courier New" no incluye el glyph de ₡ (U+20A1) en muchos sistemas
+          // y se imprime como un símbolo roto — se priorizan fuentes
+          // monoespaciadas modernas con mejor cobertura Unicode, y Courier
+          // New queda solo como último recurso.
+          fontFamily: 'ui-monospace, "Cascadia Mono", "SF Mono", Menlo, Consolas, "Courier New", monospace',
+          fontSize: '11px', lineHeight: 1.45,
           background: '#fff', color: '#000',
         }}
       >
@@ -126,7 +131,8 @@ export default function FacturaPrint() {
               <tr key={i}>
                 <td colSpan={3} style={{ paddingTop: i === 0 ? 0 : 3 }}>
                   <div className="flex justify-between">
-                    <span>{item.nombre}{item.tamano ? ` (${item.tamano})` : ''}</span>
+                    {/* item.nombre ya incluye el tamaño, ej. "Jamón (Mediana)" — no repetirlo */}
+                    <span>{item.nombre}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>{item.qty} x {fmtColones(item.precio)}</span>
