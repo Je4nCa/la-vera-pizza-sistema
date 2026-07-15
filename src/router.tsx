@@ -11,6 +11,7 @@ import Configuracion from '@/pages/Configuracion'
 import CierreCaja    from '@/pages/CierreCaja'
 import Ordenes        from '@/pages/Ordenes'
 import PantallaCocina from '@/pages/PantallaCocina'
+import FacturaPrint   from '@/pages/FacturaPrint'
 
 export default function Router() {
   return (
@@ -18,6 +19,8 @@ export default function Router() {
       <Routes>
         {/* Pantalla de cocina: fullscreen, sin sidebar/topbar */}
         <Route path="pantalla-cocina" element={<PantallaCocina />} />
+        {/* Impresión de factura: ventana aparte, sin sidebar/topbar */}
+        <Route path="factura/:id" element={<FacturaPrint />} />
 
         <Route element={<Layout />}>
           <Route index            element={<Dashboard />} />

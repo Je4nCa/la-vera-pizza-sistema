@@ -374,6 +374,12 @@ export default function NuevaVenta() {
     if (!clienteNombre.trim()) { showToast('Ingresá el nombre del cliente', 'warning'); return }
     if (procesando) return
     setProcesando(true)
+
+    // Se abre la ventana de impresión EN BLANCO ya, de forma síncrona con el
+    // click — si se espera a después del await, el navegador puede bloquear
+    // el popup por no considerarlo ya un gesto directo del usuario.
+    const ventanaImpresion = window.open('', 'lavera_factura', 'width=420,height=720')
+
     try {
       // Número de factura: usa config ya cargada + timestamp para evitar getDocs
       const numFactura    = Date.now()
@@ -402,6 +408,14 @@ export default function NuevaVenta() {
       }
 
       await ventasRepository.crear(sinUndefined(venta) as unknown as Venta)
+
+      // Llevar la ventana de impresión a la factura recién creada
+      if (ventanaImpresion) {
+        const base = window.location.href.split('#')[0]
+        ventanaImpresion.location.href = `${base}#/factura/${venta.id}`
+      } else {
+        showToast('Permití las ventanas emergentes para imprimir el comprobante', 'warning')
+      }
 
       // Liberar mesa si aplica
       if (mesaActiva !== null) {
@@ -434,6 +448,7 @@ export default function NuevaVenta() {
     } catch (err) {
       console.error('procesarVenta error:', err)
       showToast('Error al procesar la venta', 'error')
+      ventanaImpresion?.close()
     } finally {
       setProcesando(false)
     }
