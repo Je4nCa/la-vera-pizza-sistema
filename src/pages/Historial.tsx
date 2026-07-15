@@ -5,7 +5,7 @@ import { ventasRepository } from '@/repositories'
 import { useUIStore } from '@/store'
 import { fmtColones, fmtFecha, isoFecha } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { Search, Ban, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Ban, ChevronDown, ChevronUp, Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { Venta } from '@/types'
@@ -49,6 +49,12 @@ export default function Historial() {
   const paginadas = filtradas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
 
   const totalFiltrado = filtradas.filter((v) => v.estado !== 'anulada').reduce((s, v) => s + v.total, 0)
+
+  function imprimirVenta(venta: Venta) {
+    const url = window.location.href.split('#')[0] + `#/factura/${venta.id}`
+    const w = window.open(url, 'lavera_factura', 'width=420,height=720')
+    if (!w) showToast('Permití las ventanas emergentes para imprimir el comprobante', 'warning')
+  }
 
   async function anularVenta(venta: Venta) {
     if (!confirm(`¿Anular la factura ${venta.codigoFactura}?`)) return
@@ -186,13 +192,16 @@ export default function Historial() {
                     </tfoot>
                   </table>
 
-                  {venta.estado !== 'anulada' && (
-                    <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" size="sm" onClick={() => imprimirVenta(venta)}>
+                      <Printer size={13}/> Reimprimir
+                    </Button>
+                    {venta.estado !== 'anulada' && (
                       <Button variant="destructive" size="sm" onClick={() => anularVenta(venta)}>
                         <Ban size={13}/> Anular Factura
                       </Button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
             </div>
