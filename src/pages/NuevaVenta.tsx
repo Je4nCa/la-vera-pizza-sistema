@@ -170,11 +170,13 @@ function ModalSplit({ total, onClose }: { total: number; onClose: () => void }) 
 
 // ─── Componente principal ────────────────────────────────────────────────────
 // ─── Modal Confirmar Pago ─────────────────────────────────────────────────────
-function ModalConfirmarPago({ metodoPago, total, sinpeNumero, sinpeNombre, procesando, onConfirmar, onClose }: {
+function ModalConfirmarPago({ metodoPago, total, sinpeNumero, sinpeNombre, clienteNombre, onChangeCliente, procesando, onConfirmar, onClose }: {
   metodoPago: MetodoPago
   total: number
   sinpeNumero: string
   sinpeNombre: string
+  clienteNombre: string
+  onChangeCliente: (nombre: string) => void
   procesando: boolean
   onConfirmar: () => void
   onClose: () => void
@@ -186,6 +188,7 @@ function ModalConfirmarPago({ metodoPago, total, sinpeNumero, sinpeNombre, proce
     tarjeta:  'Confirmá que el cobro en tarjeta fue aprobado',
     sinpe:    'Mostrá el QR al cliente y confirmá cuando recibas la transferencia',
   }
+  const nombreValido = clienteNombre.trim().length > 0
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
@@ -205,6 +208,22 @@ function ModalConfirmarPago({ metodoPago, total, sinpeNumero, sinpeNombre, proce
           Cobrar con {etiquetas[metodoPago]}
         </h2>
         <p className="text-xs text-muted-foreground mb-4">{mensajes[metodoPago]}</p>
+
+        {/* Nombre del cliente — obligatorio, se muestra en la pantalla de cocina */}
+        <div className="text-left mb-4">
+          <label className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1 block">
+            Nombre del cliente <span className="text-[#C4432D]">*</span>
+          </label>
+          <input
+            autoFocus
+            value={clienteNombre}
+            onChange={(e) => onChangeCliente(e.target.value)}
+            placeholder="Ej: María García"
+            disabled={procesando}
+            className="w-full border-2 border-border rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:border-[#C4432D] disabled:opacity-60"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">Este nombre aparece en la pantalla de cocina</p>
+        </div>
 
         {/* Monto total destacado */}
         <div className="bg-secondary rounded-2xl py-5 px-6 mb-5">
@@ -236,7 +255,7 @@ function ModalConfirmarPago({ metodoPago, total, sinpeNumero, sinpeNombre, proce
         <Button
           className="w-full h-12 text-base font-bold"
           onClick={onConfirmar}
-          disabled={procesando}
+          disabled={procesando || !nombreValido}
         >
           {procesando ? (
             <span className="flex items-center gap-2">
@@ -247,6 +266,9 @@ function ModalConfirmarPago({ metodoPago, total, sinpeNumero, sinpeNombre, proce
             `✓ Confirmar Pago`
           )}
         </Button>
+        {!procesando && !nombreValido && (
+          <p className="text-[11px] text-[#C4432D] mt-2">Ingresá el nombre del cliente para continuar</p>
+        )}
 
         {!procesando && (
           <button
@@ -273,7 +295,7 @@ export default function NuevaVenta() {
     mesaActiva, splitNum, splitVisible,
     agregarItem, incrementarItem, decrementarItem, eliminarItem,
     actualizarNota, limpiarCarrito,
-    setMetodoPago, setMesaActiva, setSplitVisible,
+    setMetodoPago, setMesaActiva, setSplitVisible, setCliente,
   } = useCarritoStore()
 
   const { showToast } = useUIStore()
@@ -349,6 +371,7 @@ export default function NuevaVenta() {
 
   async function procesarVenta() {
     if (items.length === 0) { showToast('Carrito vacío', 'warning'); return }
+    if (!clienteNombre.trim()) { showToast('Ingresá el nombre del cliente', 'warning'); return }
     if (procesando) return
     setProcesando(true)
     try {
@@ -362,7 +385,7 @@ export default function NuevaVenta() {
         numFactura,
         codigoFactura,
         fecha:         new Date().toISOString(),
-        cliente:       clienteNombre || 'Público General',
+        cliente:       clienteNombre.trim(),
         cedula:        clienteCedula,
         telefono:      clienteTelefono,
         mesa:          mesaActiva,
@@ -393,7 +416,7 @@ export default function NuevaVenta() {
           id:            nanoid(),
           num:           String(numFactura).slice(-4),
           ventaId:       venta.id,
-          cliente:       clienteNombre || 'Público General',
+          cliente:       clienteNombre.trim(),
           detalle:       detalleOrden,
           mesa:          mesaActiva,
           estado:        'recibida',
@@ -557,9 +580,15 @@ export default function NuevaVenta() {
         <div className="border-t border-border bg-white px-4 py-4 space-y-3">
           {/* Datos cliente + descuento */}
           <div className="flex gap-2">
-            <button onClick={() => setModalCliente(true)} className="flex-1 flex items-center gap-1.5 text-[11px] text-muted-foreground border border-border rounded-lg px-3 py-2 hover:bg-secondary transition-colors truncate">
+            <button
+              onClick={() => setModalCliente(true)}
+              className={cn(
+                'flex-1 flex items-center gap-1.5 text-[11px] border rounded-lg px-3 py-2 hover:bg-secondary transition-colors truncate',
+                clienteNombre ? 'text-muted-foreground border-border' : 'text-[#C4432D] border-[#C4432D]/40 font-semibold'
+              )}
+            >
               <Users size={12}/>
-              <span className="truncate">{clienteNombre || 'Público General'}</span>
+              <span className="truncate">{clienteNombre || '+ Nombre del cliente'}</span>
             </button>
             <button onClick={() => setModalDesc(true)} className="flex items-center gap-1.5 text-[11px] text-muted-foreground border border-border rounded-lg px-3 py-2 hover:bg-secondary transition-colors">
               <Tag size={12}/>
@@ -636,6 +665,8 @@ export default function NuevaVenta() {
           total={total}
           sinpeNumero={cfg?.sinpeNumero ?? ''}
           sinpeNombre={cfg?.sinpeNombre ?? ''}
+          clienteNombre={clienteNombre}
+          onChangeCliente={(nombre) => setCliente(nombre, clienteCedula, clienteTelefono)}
           procesando={procesando}
           onConfirmar={procesarVenta}
           onClose={() => !procesando && setModalConfirmarPago(false)}

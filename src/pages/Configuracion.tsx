@@ -74,7 +74,7 @@ export default function Configuracion() {
         telefono:  form.telefono,
         email:     form.email,
         mensaje:   form.mensaje,
-        iva:       Number(form.iva) / 100,
+        iva:       Number(form.iva) || 0,
         prefijo:   form.prefijo,
         actividad: form.actividad,
         tipoCont:  form.tipoCont,

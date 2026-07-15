@@ -193,7 +193,9 @@ export default function Dashboard() {
             <Button variant="outline" size="sm" onClick={() => navigate('/historial')}>Ver todas</Button>
           </CardHeader>
           <CardContent className="pt-2">
-            {recientes.length === 0 ? (
+            {ventas === undefined ? (
+              <p className="text-center text-muted-foreground py-8">Cargando…</p>
+            ) : recientes.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No hay ventas aún</p>
             ) : (
               <div className="space-y-0">
