@@ -33,7 +33,12 @@ function TicketCliente({ venta, cfg }: { venta: Venta; cfg?: ConfigNegocio }) {
   return (
     <div
       style={{
-        width: '80mm', padding: '4mm 3mm',
+        // width: 80mm + padding: 3mm a cada lado SIN border-box = 86mm reales,
+        // más ancho que el papel físico → se cortaba el lado derecho al
+        // imprimir. Con border-box el padding queda DENTRO de los 80mm.
+        // Se deja además un margen de seguridad (72mm de contenido) porque
+        // muchas térmicas de "80mm" tienen un área imprimible real menor.
+        width: '72mm', boxSizing: 'border-box', padding: '4mm 2mm', margin: '0 auto',
         fontFamily: FUENTE_TICKET, fontSize: '11px', lineHeight: 1.45,
         background: '#fff', color: '#000',
       }}
@@ -131,7 +136,9 @@ function TicketCocina({ venta }: { venta: Venta }) {
   return (
     <div
       style={{
-        width: '80mm', padding: '4mm 3mm',
+        // Ver comentario en TicketCliente: 72mm + border-box para que el
+        // contenido nunca se pase del ancho físico del papel de 80mm.
+        width: '72mm', boxSizing: 'border-box', padding: '4mm 2mm', margin: '0 auto',
         fontFamily: FUENTE_TICKET, fontSize: '12px', lineHeight: 1.5,
         background: '#fff', color: '#000',
       }}
