@@ -9,7 +9,7 @@ import { sinUndefined } from '@/lib/utils'
 import { nanoid } from 'nanoid'
 import {
   Trash2, Plus, Minus, StickyNote, CreditCard, Banknote, Smartphone,
-  Users, Tag, X, Scissors,
+  Users, Tag, X, Scissors, Pencil,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@/components/ui/button'
@@ -294,7 +294,7 @@ export default function NuevaVenta() {
     clienteNombre, clienteCedula, clienteTelefono,
     mesaActiva, splitNum, splitVisible,
     agregarItem, incrementarItem, decrementarItem, eliminarItem,
-    actualizarNota, limpiarCarrito,
+    actualizarNota, actualizarPrecio, limpiarCarrito,
     setMetodoPago, setMesaActiva, setSplitVisible, setCliente,
   } = useCarritoStore()
 
@@ -309,6 +309,7 @@ export default function NuevaVenta() {
   const [modalSplit, setModalSplit]                 = useState(false)
   const [modalConfirmarPago, setModalConfirmarPago] = useState(false)
   const [notaActiva, setNotaActiva]                 = useState<string | null>(null)
+  const [precioActivo, setPrecioActivo]             = useState<string | null>(null)
   const [procesando, setProcesando]                 = useState(false)
 
   const { subtotalNeto, ivaTotal, descuento, total } = calcularTotales(items, descValor, descTipo)
@@ -573,13 +574,39 @@ export default function NuevaVenta() {
                   </button>
                 </div>
                 <div className="text-[13px] font-bold text-[#C4432D] min-w-[60px] text-right">{fmtColones(item.precio * item.qty)}</div>
-                <button onClick={() => setNotaActiva(notaActiva === item.cartId ? null : item.cartId)} className={cn('ml-1 transition-colors', item.nota ? 'text-[#D4A35A]' : 'text-muted-foreground hover:text-foreground')}>
+                <button
+                  onClick={() => setPrecioActivo(precioActivo === item.cartId ? null : item.cartId)}
+                  className={cn('ml-1 transition-colors', precioActivo === item.cartId ? 'text-[#C4432D]' : 'text-muted-foreground hover:text-foreground')}
+                  title="Ajustar precio (ej. cobro de un extra)"
+                >
+                  <Pencil size={13}/>
+                </button>
+                <button onClick={() => setNotaActiva(notaActiva === item.cartId ? null : item.cartId)} className={cn('transition-colors', item.nota ? 'text-[#D4A35A]' : 'text-muted-foreground hover:text-foreground')}>
                   <StickyNote size={13}/>
                 </button>
                 <button onClick={() => eliminarItem(item.cartId)} className="text-muted-foreground hover:text-destructive transition-colors">
                   <X size={13}/>
                 </button>
               </div>
+              {precioActivo === item.cartId && (
+                <div className="mt-2 flex items-center gap-2">
+                  <input
+                    autoFocus
+                    type="number"
+                    min="0"
+                    defaultValue={item.precio}
+                    onBlur={(e) => {
+                      const val = Number(e.target.value)
+                      if (!Number.isNaN(val)) actualizarPrecio(item.cartId, val)
+                      setPrecioActivo(null)
+                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                    placeholder="Precio unitario"
+                    className="flex-1 text-xs border border-border rounded-lg px-3 py-2 focus:outline-none focus:border-[#C4432D] bg-white"
+                  />
+                  <span className="text-[10px] text-muted-foreground">c/u · ej. extra queso</span>
+                </div>
+              )}
               {notaActiva === item.cartId && (
                 <input
                   autoFocus

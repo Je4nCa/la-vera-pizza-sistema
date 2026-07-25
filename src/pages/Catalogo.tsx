@@ -55,6 +55,10 @@ function ProdModal({ initial, editId, onClose }: {
         xl: Number(form.precios.xl) || 0,
       } : undefined
 
+      // Para Pizzas, el precio que realmente se cobra en Nueva Venta sale de
+      // precios.p/m/g/xl (nunca de "precio") — se deriva precio = precios.p
+      // para que el campo quede consistente y no dependa de un input aparte
+      // que nadie lee al facturar.
       const base = {
         nombre:       form.nombre.trim(),
         categoria:    form.categoria,
@@ -62,7 +66,7 @@ function ProdModal({ initial, editId, onClose }: {
         icono:        form.icono || '🍕',
         codigo:       form.codigo.trim(),
         sku:          form.codigo.trim(),
-        precio:       Number(form.precio) || 0,
+        precio:       precios ? precios.p : (Number(form.precio) || 0),
         iva:          Number(form.iva) || 0,
         stock:        form.stock === '' ? '' as const : Number(form.stock),
         stockMin:     form.stockMin === '' ? '' as const : Number(form.stockMin),
@@ -146,15 +150,15 @@ function ProdModal({ initial, editId, onClose }: {
             </div>
           )}
 
-          {/* Precio base + IVA */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1 block">
-                {form.categoria === 'Pizzas' ? 'Precio base (P)' : 'Precio'}
-              </label>
-              <input type="number" min="0" value={form.precio} onChange={(e) => upd('precio', e.target.value)}
-                className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E2D24]" placeholder="₡0" />
-            </div>
+          {/* Precio base (solo Extras — Pizzas usa el grid de tamaños de arriba) + IVA */}
+          <div className={cn('grid gap-3', form.categoria === 'Pizzas' ? 'grid-cols-1' : 'grid-cols-2')}>
+            {form.categoria !== 'Pizzas' && (
+              <div>
+                <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1 block">Precio</label>
+                <input type="number" min="0" value={form.precio} onChange={(e) => upd('precio', e.target.value)}
+                  className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#1E2D24]" placeholder="₡0" />
+              </div>
+            )}
             <div>
               <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1 block">IVA</label>
               <select value={form.iva} onChange={(e) => upd('iva', e.target.value)}

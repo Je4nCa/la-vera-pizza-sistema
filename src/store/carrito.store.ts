@@ -20,6 +20,7 @@ interface CarritoStore {
   decrementarItem:   (cartId: string) => void
   eliminarItem:      (cartId: string) => void
   actualizarNota:    (cartId: string, nota: string) => void
+  actualizarPrecio:  (cartId: string, precio: number) => void
   limpiarCarrito:    () => void
   setMetodoPago:     (m: MetodoPago) => void
   setDescuento:      (val: number, tipo: 'monto' | 'porcent') => void
@@ -66,6 +67,9 @@ export const useCarritoStore = create<CarritoStore>()(
 
       actualizarNota: (cartId, nota) =>
         set((s) => ({ items: s.items.map((i) => i.cartId === cartId ? { ...i, nota } : i) }), false, 'actualizarNota'),
+
+      actualizarPrecio: (cartId, precio) =>
+        set((s) => ({ items: s.items.map((i) => i.cartId === cartId ? { ...i, precio: Math.max(0, precio) } : i) }), false, 'actualizarPrecio'),
 
       limpiarCarrito: () =>
         set({
