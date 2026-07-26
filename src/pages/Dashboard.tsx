@@ -52,8 +52,10 @@ export default function Dashboard() {
   }, [vista, cajeroSel, cajeroActivo])
 
   const ventas = useMemo(() => {
-    if (vista === 'general' || !cajeroSel) return ventasRaw
-    return ventasRaw?.filter((v) => v.cajeroId === cajeroSel)
+    // Las ventas de AdminJC (cuenta de prueba) nunca cuentan como reales
+    const reales = ventasRaw?.filter((v) => !v.esPrueba)
+    if (vista === 'general' || !cajeroSel) return reales
+    return reales?.filter((v) => v.cajeroId === cajeroSel)
   }, [ventasRaw, vista, cajeroSel])
 
   const cajeroNombreSel = cajerosList?.find((c) => c.id === cajeroSel)?.nombre
@@ -160,7 +162,7 @@ export default function Dashboard() {
             onChange={(e) => setCajeroSel(e.target.value)}
             className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none ml-auto"
           >
-            {(cajerosList ?? []).map((c) => (
+            {(cajerosList ?? []).filter((c) => c.nombre !== 'AdminJC').map((c) => (
               <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
           </select>

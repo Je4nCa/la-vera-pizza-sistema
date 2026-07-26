@@ -32,7 +32,7 @@ export default function Reportes() {
 
   const cajerosList = useMemo(() => {
     const map = new Map<string, string>()
-    ;(ventas ?? []).forEach((v) => { if (v.cajeroId) map.set(v.cajeroId, v.cajeroNombre) })
+    ;(ventas ?? []).forEach((v) => { if (v.cajeroId && !v.esPrueba) map.set(v.cajeroId, v.cajeroNombre) })
     return [...map.entries()]
   }, [ventas])
 
@@ -53,6 +53,7 @@ export default function Reportes() {
 
   const filtradas = useMemo(() => {
     return (ventas ?? []).filter((v) => {
+      if (v.esPrueba) return false
       const d = fechaLocalDeIso(v.fecha)
       if (d < ini || d > fin || v.estado === 'anulada') return false
       if (filtroCajero && v.cajeroId !== filtroCajero) return false

@@ -5,7 +5,8 @@ import { hCol } from '@/lib/firebase'
 import { configRepository, mesasRepository, cajerosRepository } from '@/repositories'
 import { useUIStore } from '@/store'
 import { sinUndefined } from '@/lib/utils'
-import { Save, RefreshCw, AlertTriangle, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { generarVentasPrueba, eliminarVentasPrueba } from '@/lib/testData'
+import { Save, RefreshCw, AlertTriangle, Plus, Trash2, ToggleLeft, ToggleRight, FlaskConical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { ConfigNegocio, Cajero } from '@/types'
 
@@ -39,6 +40,7 @@ export default function Configuracion() {
   const { showToast } = useUIStore()
   const [form, setForm] = useState<FormConfig>(DEFAULT)
   const [loading, setLoading]     = useState(false)
+  const [loadingPruebas, setLoadingPruebas] = useState(false)
   const [tab, setTab]             = useState<'negocio' | 'sistema' | 'cajeros' | 'datos'>('negocio')
   const [nuevoCajero, setNuevoCajero] = useState('')
 
@@ -115,6 +117,33 @@ export default function Configuracion() {
       showToast('Error al recrear mesas', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function generarPruebas() {
+    setLoadingPruebas(true)
+    try {
+      const n = await generarVentasPrueba(20)
+      showToast(`${n} ventas de prueba creadas ✓`, 'ok')
+    } catch (err) {
+      console.error(err)
+      showToast('Error al generar ventas de prueba', 'error')
+    } finally {
+      setLoadingPruebas(false)
+    }
+  }
+
+  async function borrarPruebas() {
+    if (!confirm('¿Eliminar todas las ventas y órdenes de prueba? Esto no afecta ventas reales.')) return
+    setLoadingPruebas(true)
+    try {
+      const { ventas: nv, ordenes: no } = await eliminarVentasPrueba()
+      showToast(`Eliminadas: ${nv} ventas, ${no} órdenes de prueba`, 'ok')
+    } catch (err) {
+      console.error(err)
+      showToast('Error al eliminar pruebas', 'error')
+    } finally {
+      setLoadingPruebas(false)
     }
   }
 
@@ -325,6 +354,25 @@ export default function Configuracion() {
             <Button variant="outline" onClick={recrearMesas} disabled={loading}>
               <RefreshCw size={14}/> Recrear {form.numMesas} Mesas
             </Button>
+          </div>
+
+          <div className="bg-[#EEF2FF] border border-[#6366F1]/30 rounded-xl p-4">
+            <div className="flex items-center gap-2 text-[#6366F1] font-semibold text-sm mb-2">
+              <FlaskConical size={15}/> Datos de Prueba
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Genera 20 ventas con productos aleatorios (y sus órdenes en Pantalla Cocina) para
+              probar el sistema con volumen. Quedan marcadas como prueba y <strong>nunca cuentan</strong> en
+              Historial, Dashboard ni Reportes — igual que las ventas hechas con el cajero AdminJC.
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={generarPruebas} disabled={loadingPruebas}>
+                <FlaskConical size={14}/> {loadingPruebas ? 'Generando…' : 'Generar 20 Ventas de Prueba'}
+              </Button>
+              <Button variant="destructive" onClick={borrarPruebas} disabled={loadingPruebas}>
+                <Trash2 size={14}/> Eliminar Pruebas
+              </Button>
+            </div>
           </div>
 
           <div className="bg-[#FEF2F2] border border-destructive/20 rounded-xl p-4">

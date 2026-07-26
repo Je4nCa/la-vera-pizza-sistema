@@ -67,6 +67,7 @@ export interface Venta {
   cajeroId:      string
   cajeroNombre:  string
   creadoEn:      string
+  esPrueba?:     boolean      // true = venta de AdminJC o generada por el botón de pruebas; no cuenta como venta real
 }
 
 // ─── Cliente ─────────────────────────────────────────────────────────────────
@@ -136,6 +137,7 @@ export interface Orden {
   estado:        EstadoOrden
   creadoEn:      string
   actualizadoEn: string
+  esPrueba?:     boolean       // true = generada por el botón de datos de prueba
 }
 
 // ─── Turno / Cierre de caja ───────────────────────────────────────────────────

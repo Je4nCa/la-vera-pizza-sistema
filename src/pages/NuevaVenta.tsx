@@ -531,6 +531,9 @@ export default function NuevaVenta() {
         cajeroId:      cajeroActivo?.id      ?? '',
         cajeroNombre:  cajeroActivo?.nombre  ?? 'Sin cajero',
         creadoEn:      new Date().toISOString(),
+        // AdminJC es la cuenta de prueba/administración — sus ventas nunca
+        // deben contar como ventas reales en Historial/Dashboard/Reportes
+        esPrueba:      cajeroActivo?.nombre === 'AdminJC',
       }
 
       await ventasRepository.crear(sinUndefined(venta) as unknown as Venta)

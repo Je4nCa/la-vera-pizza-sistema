@@ -17,7 +17,7 @@ export default function Historial() {
   // cajeros únicos presentes en ventas
   const cajerosList = useMemo(() => {
     const map = new Map<string, string>()
-    ;(ventas ?? []).forEach((v) => { if (v.cajeroId) map.set(v.cajeroId, v.cajeroNombre) })
+    ;(ventas ?? []).forEach((v) => { if (v.cajeroId && !v.esPrueba) map.set(v.cajeroId, v.cajeroNombre) })
     return [...map.entries()]
   }, [ventas])
 
@@ -31,7 +31,8 @@ export default function Historial() {
   const POR_PAGINA = 20
 
   const filtradas = useMemo(() => {
-    let list = [...(ventas ?? [])]
+    // Las ventas de AdminJC (cuenta de prueba) nunca son ventas reales
+    let list = (ventas ?? []).filter((v) => !v.esPrueba)
     if (filtroFecha) list = list.filter((v) => fechaLocalDeIso(v.fecha) === filtroFecha)
     if (filtroMetodo) list = list.filter((v) => v.metodoPago === filtroMetodo)
     if (filtroEstado) list = list.filter((v) => (v.estado ?? 'pagada') === filtroEstado)
