@@ -6,7 +6,8 @@ import { configRepository, mesasRepository, cajerosRepository } from '@/reposito
 import { useUIStore } from '@/store'
 import { sinUndefined } from '@/lib/utils'
 import { generarVentasPrueba, eliminarVentasPrueba } from '@/lib/testData'
-import { Save, RefreshCw, AlertTriangle, Plus, Trash2, ToggleLeft, ToggleRight, FlaskConical } from 'lucide-react'
+import { reiniciarContadorOrdenes } from '@/lib/contadorOrdenes'
+import { Save, RefreshCw, AlertTriangle, Plus, Trash2, ToggleLeft, ToggleRight, FlaskConical, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { ConfigNegocio, Cajero } from '@/types'
 
@@ -142,6 +143,20 @@ export default function Configuracion() {
     } catch (err) {
       console.error(err)
       showToast('Error al eliminar pruebas', 'error')
+    } finally {
+      setLoadingPruebas(false)
+    }
+  }
+
+  async function reiniciarNumeroOrden() {
+    if (!confirm('¿Reiniciar el número de orden a 0001? Usalo solo antes de abrir o después de hacer pruebas — si ya hay ventas reales hoy, sus números se repetirían.')) return
+    setLoadingPruebas(true)
+    try {
+      await reiniciarContadorOrdenes()
+      showToast('Número de orden reiniciado a 0001 ✓', 'ok')
+    } catch (err) {
+      console.error(err)
+      showToast('Error al reiniciar el contador', 'error')
     } finally {
       setLoadingPruebas(false)
     }
@@ -365,12 +380,15 @@ export default function Configuracion() {
               probar el sistema con volumen. Quedan marcadas como prueba y <strong>nunca cuentan</strong> en
               Historial, Dashboard ni Reportes — igual que las ventas hechas con el cajero AdminJC.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={generarPruebas} disabled={loadingPruebas}>
                 <FlaskConical size={14}/> {loadingPruebas ? 'Generando…' : 'Generar 20 Ventas de Prueba'}
               </Button>
               <Button variant="destructive" onClick={borrarPruebas} disabled={loadingPruebas}>
                 <Trash2 size={14}/> Eliminar Pruebas
+              </Button>
+              <Button variant="outline" onClick={reiniciarNumeroOrden} disabled={loadingPruebas}>
+                <RotateCcw size={14}/> Reiniciar Número de Orden
               </Button>
             </div>
           </div>

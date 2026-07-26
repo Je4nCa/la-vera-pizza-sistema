@@ -29,3 +29,16 @@ export async function siguienteNumeroOrden(): Promise<number> {
 export function formatearNumOrden(n: number): string {
   return String(n).padStart(4, '0')
 }
+
+/**
+ * Reinicia el contador del día a 0, así la próxima venta vuelve a arrancar
+ * en 0001. Uso manual desde Configuración — pensado para después de
+ * generar ventas de prueba, no para usar en medio de un turno real (los
+ * números ya emitidos se repetirían).
+ */
+export async function reiniciarContadorOrdenes(): Promise<void> {
+  const ref = hDoc('contadores', 'ordenes-diarias')
+  await runTransaction(firestore, async (tx) => {
+    tx.set(ref, { fecha: isoFecha(), ultimo: 0 })
+  })
+}
