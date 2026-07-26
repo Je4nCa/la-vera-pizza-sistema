@@ -9,7 +9,7 @@ import { sinUndefined } from '@/lib/utils'
 import { nanoid } from 'nanoid'
 import {
   Trash2, Plus, Minus, StickyNote, CreditCard, Banknote, Smartphone,
-  Users, Tag, X, Scissors, Pencil,
+  Users, Tag, X, Scissors, Pencil, SplitSquareHorizontal,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@/components/ui/button'
@@ -56,6 +56,122 @@ function ModalTamano({ prod, onSelect, onClose }: {
             )
           })}
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal de mitad y mitad ───────────────────────────────────────────────────
+function ModalMitadMitad({ pizzas, onAdd, onClose }: {
+  pizzas: Producto[]
+  onAdd:  (item: ItemVenta) => void
+  onClose: () => void
+}) {
+  const [tamano, setTamano]   = useState<TamanoKey | null>(null)
+  const [sabor1, setSabor1]   = useState<Producto | null>(null)
+  const [sabor2, setSabor2]   = useState<Producto | null>(null)
+
+  const precio1 = tamano && sabor1 ? sabor1.precios?.[tamano] ?? 0 : 0
+  const precio2 = tamano && sabor2 ? sabor2.precios?.[tamano] ?? 0 : 0
+  const precioFinal = Math.max(precio1, precio2)
+  const listo = tamano && sabor1 && sabor2
+
+  function agregar() {
+    if (!tamano || !sabor1 || !sabor2) return
+    const tamanoLabel = TAMANOS.find((t) => t.key === tamano)!.label
+    const idsOrdenados = [sabor1.id, sabor2.id].sort()
+    const item: ItemVenta = {
+      cartId:    `mitad_${idsOrdenados[0]}_${idsOrdenados[1]}_${tamano}`,
+      id:        `mitad_${idsOrdenados[0]}_${idsOrdenados[1]}`,
+      nombre:    `½ ${sabor1.nombre} / ½ ${sabor2.nombre} (${tamanoLabel})`,
+      precio:    precioFinal,
+      iva:       Math.max(sabor1.iva, sabor2.iva),
+      qty:       1,
+      icono:     '🍕',
+      categoria: 'Pizzas',
+      tamano:    tamanoLabel,
+    }
+    onAdd(item)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 animate-fade-in-up">
+        <button onClick={onClose} className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"><X size={18}/></button>
+        <div className="text-center mb-5">
+          <div className="text-3xl mb-2">🍕½</div>
+          <h2 className="font-serif text-xl text-primary">Pizza Mitad y Mitad</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Se cobra el precio del sabor más caro de los dos</p>
+        </div>
+
+        {/* Tamaño */}
+        <div className="mb-5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">1. Tamaño</label>
+          <div className="grid grid-cols-4 gap-2">
+            {TAMANOS.map(({ key, abbr }) => (
+              <button
+                key={key}
+                onClick={() => setTamano(key)}
+                className={cn('border-2 rounded-xl py-2.5 text-center font-serif font-black text-lg transition-all',
+                  tamano === key ? 'border-[#C4432D] bg-[#C4432D]/5 text-[#C4432D]' : 'border-border text-muted-foreground hover:border-[#1E2D24]/40'
+                )}
+              >
+                {abbr}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sabor 1 */}
+        <div className="mb-5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">2. Primera mitad</label>
+          <div className="grid grid-cols-2 gap-2">
+            {pizzas.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSabor1(p)}
+                className={cn('flex items-center gap-2 border-2 rounded-xl px-3 py-2 text-left text-xs font-semibold transition-all',
+                  sabor1?.id === p.id ? 'border-[#C4432D] bg-[#C4432D]/5 text-[#C4432D]' : 'border-border text-muted-foreground hover:border-[#1E2D24]/40'
+                )}
+              >
+                <span className="text-base">{p.icono}</span> {p.nombre}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Sabor 2 */}
+        <div className="mb-5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2 block">3. Segunda mitad</label>
+          <div className="grid grid-cols-2 gap-2">
+            {pizzas.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSabor2(p)}
+                className={cn('flex items-center gap-2 border-2 rounded-xl px-3 py-2 text-left text-xs font-semibold transition-all',
+                  sabor2?.id === p.id ? 'border-[#C4432D] bg-[#C4432D]/5 text-[#C4432D]' : 'border-border text-muted-foreground hover:border-[#1E2D24]/40'
+                )}
+              >
+                <span className="text-base">{p.icono}</span> {p.nombre}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {listo && (
+          <div className="bg-secondary rounded-xl p-4 mb-4 text-center">
+            <div className="text-xs text-muted-foreground mb-1">
+              ½ {sabor1!.nombre} · ½ {sabor2!.nombre}
+            </div>
+            <div className="font-serif text-2xl font-black text-[#C4432D]">{fmtColones(precioFinal)}</div>
+          </div>
+        )}
+
+        <Button className="w-full" onClick={agregar} disabled={!listo}>
+          Agregar al Carrito
+        </Button>
       </div>
     </div>
   )
@@ -304,6 +420,7 @@ export default function NuevaVenta() {
   const [categoriaActiva, setCategoriaActiva] = useState<'Pizzas' | 'Extras'>('Pizzas')
   const [busqueda, setBusqueda] = useState('')
   const [modalTamano, setModalTamano]               = useState<Producto | null>(null)
+  const [modalMitad, setModalMitad]                 = useState(false)
   const [modalDesc, setModalDesc]                   = useState(false)
   const [modalCliente, setModalCliente]             = useState(false)
   const [modalSplit, setModalSplit]                 = useState(false)
@@ -494,6 +611,15 @@ export default function NuevaVenta() {
                 {cat}
               </button>
             ))}
+            {categoriaActiva === 'Pizzas' && (
+              <button
+                onClick={() => setModalMitad(true)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold border-2 border-[#D4A35A] text-[#D4A35A] hover:bg-[#D4A35A]/10 transition-all shrink-0"
+                title="Armar pizza mitad y mitad"
+              >
+                <SplitSquareHorizontal size={15}/> ½ y ½
+              </button>
+            )}
           </div>
         </div>
 
@@ -700,6 +826,13 @@ export default function NuevaVenta() {
 
       {/* Modales */}
       {modalTamano && <ModalTamano prod={modalTamano} onSelect={selectTamano} onClose={() => setModalTamano(null)} />}
+      {modalMitad && (
+        <ModalMitadMitad
+          pizzas={(productos ?? []).filter((p) => p.categoria === 'Pizzas' && p.estado === 'activo' && p.precios)}
+          onAdd={agregarItem}
+          onClose={() => setModalMitad(false)}
+        />
+      )}
       {modalDesc    && <ModalDescuento onClose={() => setModalDesc(false)} />}
       {modalCliente && <ModalCliente onClose={() => setModalCliente(false)} />}
       {modalSplit   && <ModalSplit total={total} onClose={() => setModalSplit(false)} />}

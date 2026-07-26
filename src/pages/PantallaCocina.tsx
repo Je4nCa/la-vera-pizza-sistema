@@ -26,6 +26,16 @@ const TICKER = [
   'Simple. Auténtica. Inolvidable.',
 ]
 
+// Con pocas órdenes, tarjetas grandes y cómodas de leer de lejos. A medida
+// que hay más órdenes activas a la vez, las tarjetas se van achicando para
+// que quepan todas en pantalla sin necesidad de hacer scroll.
+function densidadPara(n: number) {
+  if (n <= 6)  return { minCard: 360, gap: 28, padding: 56, orderNum: 56, emoji: 48, clientName: 30, detail: 14, badge: 16, badgePad: '14px 22px', stripe: 6, top: '16px 24px' }
+  if (n <= 12) return { minCard: 280, gap: 20, padding: 36, orderNum: 40, emoji: 36, clientName: 22, detail: 13, badge: 13, badgePad: '10px 16px', stripe: 5, top: '12px 20px' }
+  if (n <= 20) return { minCard: 220, gap: 14, padding: 24, orderNum: 30, emoji: 26, clientName: 17, detail: 11, badge: 11, badgePad: '8px 14px',  stripe: 4, top: '10px 16px' }
+  return         { minCard: 180, gap: 10, padding: 16, orderNum: 22, emoji: 20, clientName: 14, detail: 10, badge: 10, badgePad: '6px 12px',  stripe: 3, top: '8px 12px' }
+}
+
 export default function PantallaCocina() {
   const ordenes = useCollection<Orden>(() => hCol('ordenes'))
   const [hora, setHora] = useState('')
@@ -67,6 +77,8 @@ export default function PantallaCocina() {
       .sort((a, b) => new Date(a.creadoEn).getTime() - new Date(b.creadoEn).getTime()),
     [ordenes, hoy]
   )
+
+  const d = densidadPara(visibles.length)
 
   return (
     <div
@@ -116,10 +128,11 @@ export default function PantallaCocina() {
         </div>
       </div>
 
-      {/* Grid de órdenes */}
+      {/* Grid de órdenes — la densidad (tamaño de tarjeta/letra) se recalcula
+          según cuántas órdenes activas hay, para que todas quepan sin scroll */}
       <div
-        className="flex-1 p-14 grid gap-7 content-start"
-        style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))' }}
+        className="flex-1 grid content-start transition-all duration-300"
+        style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${d.minCard}px, 1fr))`, gap: d.gap, padding: d.padding }}
       >
         {visibles.length === 0 ? (
           <div className="col-span-full text-center py-24">
@@ -138,36 +151,36 @@ export default function PantallaCocina() {
                 boxShadow: o.estado === 'listo' ? '0 0 30px rgba(60,200,90,.15), 0 4px 20px rgba(0,0,0,.3)' : undefined,
               }}
             >
-              <div className="h-1.5 w-full" style={{ background: c.stripe }} />
+              <div style={{ height: d.stripe, width: '100%', background: c.stripe }} />
               <div
-                className="px-6 pt-4 pb-4 flex items-end justify-between border-b border-white/[.07]"
-                style={{ background: 'rgba(0,0,0,.28)' }}
+                className="flex items-end justify-between border-b border-white/[.07]"
+                style={{ background: 'rgba(0,0,0,.28)', padding: d.top }}
               >
                 <div className="leading-none">
-                  <span className="block text-[13px] text-[#F2ECE3]/40 uppercase tracking-wide mb-0.5">Orden</span>
-                  <span className="font-serif text-[56px] font-black text-[#D4A35A] leading-none">#{o.num}</span>
+                  <span className="block text-[#F2ECE3]/40 uppercase tracking-wide mb-0.5" style={{ fontSize: Math.max(10, d.detail - 2) }}>Orden</span>
+                  <span className="font-serif font-black text-[#D4A35A] leading-none" style={{ fontSize: d.orderNum }}>#{o.num}</span>
                 </div>
-                <div className="text-5xl leading-none" style={{ filter: 'drop-shadow(0 0 12px rgba(255,255,255,.15))' }}>
+                <div className="leading-none" style={{ fontSize: d.emoji, filter: 'drop-shadow(0 0 12px rgba(255,255,255,.15))' }}>
                   {c.emoji}
                 </div>
               </div>
-              <div className="px-6 pt-5 pb-7">
+              <div style={{ padding: d.top }}>
                 <div
-                  className="font-serif text-[#F2ECE3] text-3xl font-bold mb-1.5 leading-tight"
-                  style={{ textShadow: '0 1px 4px rgba(0,0,0,.4)' }}
+                  className="font-serif text-[#F2ECE3] font-bold leading-tight mb-1.5"
+                  style={{ fontSize: d.clientName, textShadow: '0 1px 4px rgba(0,0,0,.4)' }}
                 >
                   {o.cliente}
                 </div>
-                <div className="text-sm text-[#F2ECE3]/50 font-medium mb-5">
+                <div className="text-[#F2ECE3]/50 font-medium mb-4" style={{ fontSize: d.detail }}>
                   {o.detalle || (o.mesa ? `Mesa ${o.mesa}` : 'Mostrador')}
                 </div>
                 <div
-                  className="flex items-center gap-3 px-5 py-3.5 rounded-xl text-base font-bold uppercase tracking-wide w-full"
-                  style={{ background: c.badgeBg, color: c.badgeColor, border: `1.5px solid ${c.badgeBorder}` }}
+                  className="flex items-center gap-3 rounded-xl font-bold uppercase tracking-wide w-full"
+                  style={{ background: c.badgeBg, color: c.badgeColor, border: `1.5px solid ${c.badgeBorder}`, padding: d.badgePad, fontSize: d.badge }}
                 >
                   <span
-                    className={cn('w-3.5 h-3.5 rounded-full shrink-0', c.pulse && 'animate-pulse')}
-                    style={{ background: c.badgeColor }}
+                    className={cn('rounded-full shrink-0', c.pulse && 'animate-pulse')}
+                    style={{ background: c.badgeColor, width: Math.max(8, d.badge - 4), height: Math.max(8, d.badge - 4) }}
                   />
                   <span className="flex-1">{c.label}</span>
                 </div>
