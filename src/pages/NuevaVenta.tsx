@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
-import { fmtColones } from '@/lib/utils'
+import { fmtColones, isoFecha } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { useCarritoStore, useUIStore, useCajeroStore, calcularTotales } from '@/store'
 import { ventasRepository, mesasRepository, ordenesRepository } from '@/repositories'
 import { sinUndefined } from '@/lib/utils'
+import { siguienteNumeroOrden, formatearNumOrden } from '@/lib/contadorOrdenes'
 import { nanoid } from 'nanoid'
 import {
   Trash2, Plus, Minus, StickyNote, CreditCard, Banknote, Smartphone,
@@ -499,16 +500,21 @@ export default function NuevaVenta() {
     const ventanaImpresion = window.open('', 'lavera_factura', 'width=420,height=720')
 
     try {
-      // Número de factura: usa config ya cargada + timestamp para evitar getDocs
-      const numFactura    = Date.now()
+      const numFactura  = Date.now()
+      // Número de orden consecutivo del día (0001, 0002…) — atómico vía
+      // transacción de Firestore, se reinicia solo cuando cambia el día
+      const numOrdenDia = await siguienteNumeroOrden()
+      const numOrdenTxt = formatearNumOrden(numOrdenDia)
       // Se quita cualquier guión final que el usuario haya puesto en el
       // prefijo de Configuración (ej. "LVP-") para no duplicarlo aquí
-      const prefijo       = (cfg?.prefijo ?? 'LVP').replace(/-+$/, '')
-      const codigoFactura = `${prefijo}-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${String(numFactura).slice(-4)}`
+      const prefijo        = (cfg?.prefijo ?? 'LVP').replace(/-+$/, '')
+      const fechaCompacta  = isoFecha().slice(2).replace(/-/g, '') // YYMMDD en hora LOCAL
+      const codigoFactura  = `${prefijo}-${fechaCompacta}-${numOrdenTxt}`
 
       const venta: Venta = {
         id:            nanoid(),
         numFactura,
+        numOrdenDia,
         codigoFactura,
         fecha:         new Date().toISOString(),
         cliente:       clienteNombre.trim(),
@@ -548,7 +554,7 @@ export default function NuevaVenta() {
         const detalleOrden = items.map((i) => `${i.nombre}${i.qty > 1 ? ` x${i.qty}` : ''}`).join(', ')
         const orden: Orden = {
           id:            nanoid(),
-          num:           String(numFactura).slice(-4),
+          num:           numOrdenTxt,
           ventaId:       venta.id,
           cliente:       clienteNombre.trim(),
           detalle:       detalleOrden,

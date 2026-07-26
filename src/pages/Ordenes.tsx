@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { ordenesRepository } from '@/repositories'
-import { isoFecha } from '@/lib/utils'
+import { isoFecha, fechaLocalDeIso } from '@/lib/utils'
 import { useUIStore } from '@/store'
 import { Tv, Trash2, ChefHat } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -46,7 +46,7 @@ export default function Ordenes() {
 
   const activas = useMemo(() =>
     (ordenes ?? [])
-      .filter((o) => o.creadoEn.startsWith(hoy) && estadoDe(o) !== 'entregado')
+      .filter((o) => fechaLocalDeIso(o.creadoEn) === hoy && estadoDe(o) !== 'entregado')
       .sort((a, b) => new Date(b.creadoEn).getTime() - new Date(a.creadoEn).getTime()),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [ordenes, hoy, pendientes]

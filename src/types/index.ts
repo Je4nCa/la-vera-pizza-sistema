@@ -50,6 +50,7 @@ export type EstadoVenta  = 'pagada' | 'anulada'
 export interface Venta {
   id:            ID
   numFactura:    number
+  numOrdenDia:   number       // 1, 2, 3… — se reinicia cada día (hora local)
   codigoFactura: string
   fecha:         string       // ISO
   cliente:       string

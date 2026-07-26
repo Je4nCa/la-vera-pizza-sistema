@@ -46,12 +46,31 @@ export function fmtFechaSolo(iso: string): string {
   })
 }
 
-/** Retorna YYYY-MM-DD de un Date */
+/**
+ * Retorna YYYY-MM-DD en la zona horaria LOCAL del navegador (Costa Rica).
+ * OJO: toISOString() usa UTC — con CR a UTC-6, cualquier venta después de
+ * las 6pm caía bajo la fecha del día siguiente y desalineaba "hoy" en
+ * Dashboard, Cierre de Caja, Pantalla Cocina, Órdenes y los filtros de
+ * Historial/Reportes. Por eso esto arma la fecha con getters locales.
+ */
 export function isoFecha(d = new Date()): string {
-  return d.toISOString().split('T')[0]
+  const y   = d.getFullYear()
+  const m   = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
 }
 
-/** Retorna YYYY-MM del mes actual */
+/** Retorna YYYY-MM del mes actual, en zona horaria LOCAL */
 export function isoMes(d = new Date()): string {
-  return d.toISOString().substring(0, 7)
+  return isoFecha(d).slice(0, 7)
+}
+
+/**
+ * Convierte una fecha ISO guardada (ej. venta.fecha, siempre en UTC) a su
+ * YYYY-MM-DD en hora LOCAL. Usar esto (no .startsWith()/.slice(0,10) sobre
+ * el string ISO crudo) para comparar contra isoFecha()/isoMes() — así
+ * "hoy" significa lo mismo para el cajero que para el filtro.
+ */
+export function fechaLocalDeIso(fechaIso: string): string {
+  return isoFecha(new Date(fechaIso))
 }

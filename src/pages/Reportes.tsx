@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
-import { fmtColones, isoMes } from '@/lib/utils'
+import { fmtColones, isoMes, isoFecha, fechaLocalDeIso } from '@/lib/utils'
 import { useUIStore } from '@/store'
 import type { Venta } from '@/types'
 
@@ -27,7 +27,7 @@ export default function Reportes() {
   const { darkMode } = useUIStore()
   const [rango, setRango]             = useState<Rango>('mes')
   const [fechaInicio, setFechaInicio] = useState(isoMes() + '-01')
-  const [fechaFin, setFechaFin]       = useState(new Date().toISOString().slice(0, 10))
+  const [fechaFin, setFechaFin]       = useState(isoFecha())
   const [filtroCajero, setFiltroCajero] = useState('')
 
   const cajerosList = useMemo(() => {
@@ -38,14 +38,13 @@ export default function Reportes() {
 
   function rangoFechas() {
     const hoy = new Date()
-    const iso  = (d: Date) => d.toISOString().slice(0, 10)
-    if (rango === 'hoy') return { ini: iso(hoy), fin: iso(hoy) }
+    if (rango === 'hoy') return { ini: isoFecha(hoy), fin: isoFecha(hoy) }
     if (rango === 'semana') {
       const inicio = new Date(hoy); inicio.setDate(hoy.getDate() - 6)
-      return { ini: iso(inicio), fin: iso(hoy) }
+      return { ini: isoFecha(inicio), fin: isoFecha(hoy) }
     }
     if (rango === 'mes') {
-      return { ini: new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().slice(0, 10), fin: iso(hoy) }
+      return { ini: isoFecha(new Date(hoy.getFullYear(), hoy.getMonth(), 1)), fin: isoFecha(hoy) }
     }
     return { ini: fechaInicio, fin: fechaFin }
   }
@@ -54,7 +53,7 @@ export default function Reportes() {
 
   const filtradas = useMemo(() => {
     return (ventas ?? []).filter((v) => {
-      const d = v.fecha.slice(0, 10)
+      const d = fechaLocalDeIso(v.fecha)
       if (d < ini || d > fin || v.estado === 'anulada') return false
       if (filtroCajero && v.cajeroId !== filtroCajero) return false
       return true
@@ -77,7 +76,7 @@ export default function Reportes() {
 
     const porDia: Record<string, number> = {}
     filtradas.forEach((v) => {
-      const d = v.fecha.slice(0, 10)
+      const d = fechaLocalDeIso(v.fecha)
       porDia[d] = (porDia[d] ?? 0) + v.total
     })
 

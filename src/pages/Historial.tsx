@@ -3,7 +3,7 @@ import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { ventasRepository } from '@/repositories'
 import { useUIStore } from '@/store'
-import { fmtColones, fmtFecha, isoFecha } from '@/lib/utils'
+import { fmtColones, fmtFecha, isoFecha, fechaLocalDeIso } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { Search, Ban, ChevronDown, ChevronUp, Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -32,7 +32,7 @@ export default function Historial() {
 
   const filtradas = useMemo(() => {
     let list = [...(ventas ?? [])]
-    if (filtroFecha) list = list.filter((v) => v.fecha.startsWith(filtroFecha))
+    if (filtroFecha) list = list.filter((v) => fechaLocalDeIso(v.fecha) === filtroFecha)
     if (filtroMetodo) list = list.filter((v) => v.metodoPago === filtroMetodo)
     if (filtroEstado) list = list.filter((v) => (v.estado ?? 'pagada') === filtroEstado)
     if (filtroCajero) list = list.filter((v) => v.cajeroId === filtroCajero)

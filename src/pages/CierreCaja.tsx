@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
-import { fmtColones, isoFecha } from '@/lib/utils'
+import { fmtColones, isoFecha, fechaLocalDeIso } from '@/lib/utils'
 import { useCajeroStore } from '@/store'
 import { Printer, LogOut, Banknote, CreditCard, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ export default function CierreCaja() {
     (ventas ?? [])
       .filter((v) =>
         v.estado !== 'anulada' &&
-        v.fecha.startsWith(hoy) &&
+        fechaLocalDeIso(v.fecha) === hoy &&
         v.cajeroId === cajeroActivo?.id
       )
       .sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime()),

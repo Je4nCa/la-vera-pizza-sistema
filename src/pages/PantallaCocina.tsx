@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
-import { isoFecha, cn } from '@/lib/utils'
+import { isoFecha, fechaLocalDeIso, cn } from '@/lib/utils'
 import { desbloquearAudio, sonarOrdenLista } from '@/lib/sound'
 import type { Orden, EstadoOrden } from '@/types'
 
@@ -73,7 +73,7 @@ export default function PantallaCocina() {
 
   const visibles = useMemo(() =>
     (ordenes ?? [])
-      .filter((o) => o.creadoEn.startsWith(hoy) && o.estado !== 'entregado')
+      .filter((o) => fechaLocalDeIso(o.creadoEn) === hoy && o.estado !== 'entregado')
       .sort((a, b) => new Date(a.creadoEn).getTime() - new Date(b.creadoEn).getTime()),
     [ordenes, hoy]
   )

@@ -4,7 +4,7 @@ import { AlertTriangle, LayoutGrid, UserCircle2 } from 'lucide-react'
 import { Bar, Line } from 'react-chartjs-2'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
-import { fmtColones, fmtFecha, isoFecha, isoMes, cn } from '@/lib/utils'
+import { fmtColones, fmtFecha, isoFecha, isoMes, fechaLocalDeIso, cn } from '@/lib/utils'
 import { useUIStore, useCajeroStore } from '@/store'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -63,8 +63,8 @@ export default function Dashboard() {
 
   const { ventasHoy, ingresosHoy, ivaHoy, totalMes } = useMemo(() => {
     const activas = (ventas ?? []).filter((v) => v.estado !== 'anulada')
-    const vHoy = activas.filter((v) => v.fecha.startsWith(hoy))
-    const vMes = activas.filter((v) => v.fecha.startsWith(mes))
+    const vHoy = activas.filter((v) => fechaLocalDeIso(v.fecha) === hoy)
+    const vMes = activas.filter((v) => fechaLocalDeIso(v.fecha).startsWith(mes))
     return {
       ventasHoy:   vHoy.length,
       ingresosHoy: vHoy.reduce((s, v) => s + v.subtotalNeto, 0),
@@ -102,10 +102,10 @@ export default function Dashboard() {
     const totales: number[] = []
     for (let i = 6; i >= 0; i--) {
       const d = new Date(); d.setDate(d.getDate() - i)
-      const key = d.toISOString().slice(0, 10)
+      const key = isoFecha(d)
       const label = d.toLocaleDateString('es-CR', { weekday: 'short', day: 'numeric' })
       const total = (ventas ?? [])
-        .filter((v) => v.estado !== 'anulada' && v.fecha.startsWith(key))
+        .filter((v) => v.estado !== 'anulada' && fechaLocalDeIso(v.fecha) === key)
         .reduce((s, v) => s + v.total, 0)
       dias.push(label)
       totales.push(total)
@@ -119,7 +119,7 @@ export default function Dashboard() {
     const counts = horas.map((h) =>
       (ventas ?? []).filter((v) =>
         v.estado !== 'anulada' &&
-        v.fecha.startsWith(hoy) &&
+        fechaLocalDeIso(v.fecha) === hoy &&
         new Date(v.fecha).getHours() === h
       ).length
     )

@@ -4,6 +4,7 @@ import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'
 import { ventasRepository } from '@/repositories'
 import { fmtColones, cn } from '@/lib/utils'
+import { formatearNumOrden } from '@/lib/contadorOrdenes'
 import { Printer, X } from 'lucide-react'
 import type { Venta, ConfigNegocio } from '@/types'
 
@@ -22,10 +23,11 @@ function horaFecha(fecha: Date) {
   return `${fecha.toLocaleDateString('es-CR')} ${fecha.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}`
 }
 
-// Mismo número que ve la Pantalla Cocina: los últimos 4 dígitos del
-// numFactura (así se calculó Orden.num al crear la orden en NuevaVenta.tsx).
+// Mismo número consecutivo del día que ve la Pantalla Cocina (Orden.num se
+// crea con el mismo valor en NuevaVenta.tsx). Ventas viejas sin
+// numOrdenDia (previas a este feature) caen al fallback del timestamp.
 function numOrden(venta: Venta): string {
-  return String(venta.numFactura).slice(-4)
+  return venta.numOrdenDia ? formatearNumOrden(venta.numOrdenDia) : String(venta.numFactura).slice(-4)
 }
 
 function TicketCliente({ venta, cfg }: { venta: Venta; cfg?: ConfigNegocio }) {
