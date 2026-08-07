@@ -1,4 +1,4 @@
-import { getDocs } from 'firebase/firestore'
+import { getDocsFromServer } from 'firebase/firestore'
 import { hCol } from './firebase'
 import { productosRepository, mesasRepository, configRepository, cajerosRepository } from '@/repositories'
 import type { Producto, Mesa, ConfigNegocio, Cajero } from '@/types'
@@ -49,15 +49,48 @@ export const CAJEROS_DEFAULT: Cajero[] = [
   { id: 'cajero-3', nombre: 'Andrea',  activo: true, creadoEn: NOW },
 ]
 
+/**
+ * Crea los cajeros por defecto que falten. No sobrescribe los existentes,
+ * así un cajero renombrado desde Configuración no vuelve a su nombre
+ * original si esto llega a correr de nuevo.
+ */
 export async function seedCajerosDefault(): Promise<void> {
-  await cajerosRepository.crearBulk(CAJEROS_DEFAULT)
+  const existentes = await getDocsFromServer(hCol('cajeros'))
+  const ids = new Set(existentes.docs.map((d) => d.id))
+  const faltantes = CAJEROS_DEFAULT.filter((c) => !ids.has(c.id))
+  if (faltantes.length > 0) {
+    await cajerosRepository.crearBulk(faltantes)
+  }
+}
+
+/**
+ * Siembra SOLO los documentos que no existen todavía.
+ *
+ * ⚠️ Nunca usar getDocs() para decidir si sembrar: getDocs() usa
+ * Source.DEFAULT, o sea "intentá el servidor y si no hay red devolvé el
+ * caché". En una carga de página fresca sin persistencia ese caché está
+ * vacío, así que un bajón momentáneo de internet hacía que snap.empty
+ * diera true con los productos intactos en el servidor — y el seed los
+ * sobrescribía con los precios default (crearBulk usa batch.set(), que
+ * reemplaza el documento entero). Ese era el bug de "los precios se
+ * vuelven default de la nada".
+ *
+ * Por eso: (1) se lee con getDocsFromServer, que falla fuerte si no hay
+ * red en vez de mentir con un snapshot vacío, y (2) se comparan los IDs
+ * existentes para crear únicamente los que faltan. Aunque la lectura
+ * fallara de alguna otra forma, ya no hay forma de pisar datos reales.
+ */
+async function idsExistentes(coleccion: string): Promise<Set<string>> {
+  const snap = await getDocsFromServer(hCol(coleccion))
+  return new Set(snap.docs.map((d) => d.id))
 }
 
 export async function seedFirestoreIfEmpty(): Promise<void> {
-  // Productos
-  const prodSnap = await getDocs(hCol('productos'))
-  if (prodSnap.empty) {
-    await productosRepository.crearBulk(PRODUCTOS_INICIALES)
+  // Productos — solo los que falten, jamás se sobrescriben los existentes
+  const prodIds = await idsExistentes('productos')
+  const prodsFaltantes = PRODUCTOS_INICIALES.filter((p) => !prodIds.has(p.id))
+  if (prodsFaltantes.length > 0) {
+    await productosRepository.crearBulk(prodsFaltantes)
   }
 
   // Config
@@ -66,22 +99,23 @@ export async function seedFirestoreIfEmpty(): Promise<void> {
     await configRepository.guardarConfig(CONFIG_INICIAL)
   }
 
-  // Cajeros
-  const cajerosSnap = await getDocs(hCol('cajeros'))
-  if (cajerosSnap.empty) {
-    await seedCajerosDefault()
+  // Cajeros — solo los que falten
+  const cajeroIds = await idsExistentes('cajeros')
+  const cajerosFaltantes = CAJEROS_DEFAULT.filter((c) => !cajeroIds.has(c.id))
+  if (cajerosFaltantes.length > 0) {
+    await cajerosRepository.crearBulk(cajerosFaltantes)
   }
 
-  // Mesas (10 por defecto)
-  const mesasSnap = await getDocs(hCol('mesas'))
-  if (mesasSnap.empty) {
-    const mesas: Mesa[] = Array.from({ length: 10 }, (_, i) => ({
-      id: `mesa-${i + 1}`,
-      num: i + 1,
-      ocupada: false,
-      orden: null,
-      desde: null,
-    }))
-    await mesasRepository.crearBulk(mesas)
+  // Mesas (10 por defecto) — solo las que falten
+  const mesaIds = await idsExistentes('mesas')
+  const mesasFaltantes: Mesa[] = Array.from({ length: 10 }, (_, i) => ({
+    id: `mesa-${i + 1}`,
+    num: i + 1,
+    ocupada: false,
+    orden: null,
+    desde: null,
+  })).filter((m) => !mesaIds.has(m.id))
+  if (mesasFaltantes.length > 0) {
+    await mesasRepository.crearBulk(mesasFaltantes)
   }
 }

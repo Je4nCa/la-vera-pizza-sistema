@@ -33,7 +33,11 @@ enableNetwork(firestore).catch((e) => console.warn('[Firebase] enableNetwork:', 
 export const auth           = getAuth(firebaseApp)
 export const googleProvider = new GoogleAuthProvider()
 
-const HOUSEHOLD_ID = import.meta.env.VITE_HOUSEHOLD_ID ?? 'la-vera-pizza'
+// Se usa || y no ?? a propósito: GitHub Actions define la variable como
+// string VACÍO cuando el secret no existe, y ?? solo cae al default con
+// null/undefined. Con ?? un secret faltante dejaba la ruta como
+// households//productos, que Firestore rechaza.
+const HOUSEHOLD_ID = import.meta.env.VITE_HOUSEHOLD_ID || 'la-vera-pizza'
 
 export const hCol = (name: string) =>
   collection(firestore, 'households', HOUSEHOLD_ID, name)

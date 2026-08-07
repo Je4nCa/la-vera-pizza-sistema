@@ -44,17 +44,35 @@ function ProdModal({ initial, editId, onClose }: {
     setForm((p) => ({ ...p, [k]: v }))
   }
 
+  /**
+   * Actualiza un precio por tamaño con la forma funcional de setState.
+   * Antes se hacía upd('precios', { ...form.precios, [k]: valor }), que lee
+   * form.precios del closure del render actual — al escribir rápido entre
+   * los campos P/M/G/XL una actualización podía pisar a la anterior y
+   * perderse el precio recién escrito.
+   */
+  function updPrecio(k: 'p' | 'm' | 'g' | 'xl', v: string) {
+    setForm((prev) => ({ ...prev, precios: { ...prev.precios, [k]: v } }))
+  }
+
   async function save() {
     if (!form.nombre.trim()) { showToast('El nombre es obligatorio', 'warning'); return }
+
+    const precios: PreciosPizza | undefined = form.categoria === 'Pizzas' ? {
+      p:  Number(form.precios.p)  || 0,
+      m:  Number(form.precios.m)  || 0,
+      g:  Number(form.precios.g)  || 0,
+      xl: Number(form.precios.xl) || 0,
+    } : undefined
+
+    // Una pizza sin ningún precio cargado no se puede cobrar en Nueva Venta
+    if (precios && precios.p === 0 && precios.m === 0 && precios.g === 0 && precios.xl === 0) {
+      showToast('Ingresá al menos un precio por tamaño', 'warning')
+      return
+    }
+
     setLoading(true)
     try {
-      const precios: PreciosPizza | undefined = form.categoria === 'Pizzas' ? {
-        p:  Number(form.precios.p)  || 0,
-        m:  Number(form.precios.m)  || 0,
-        g:  Number(form.precios.g)  || 0,
-        xl: Number(form.precios.xl) || 0,
-      } : undefined
-
       // Para Pizzas, el precio que realmente se cobra en Nueva Venta sale de
       // precios.p/m/g/xl (nunca de "precio") — se deriva precio = precios.p
       // para que el campo quede consistente y no dependa de un input aparte
@@ -88,8 +106,11 @@ function ProdModal({ initial, editId, onClose }: {
         showToast('Producto creado', 'ok')
       }
       onClose()
-    } catch {
-      showToast('Error al guardar', 'error')
+    } catch (err) {
+      // Antes este catch era vacío y tragaba el error, lo que hacía
+      // imposible diagnosticar por qué "no se guardaba"
+      console.error('[Catalogo] Error al guardar producto:', err)
+      showToast(err instanceof Error ? `Error al guardar: ${err.message}` : 'Error al guardar', 'error')
     } finally {
       setLoading(false)
     }
@@ -140,7 +161,7 @@ function ProdModal({ initial, editId, onClose }: {
                     <div className="text-[10px] text-center text-muted-foreground mb-1 uppercase">{k === 'p' ? 'Pequeña' : k === 'm' ? 'Mediana' : k === 'g' ? 'Grande' : 'X-Grande'}</div>
                     <input
                       type="number" min="0" value={form.precios[k]}
-                      onChange={(e) => upd('precios', { ...form.precios, [k]: e.target.value })}
+                      onChange={(e) => updPrecio(k, e.target.value)}
                       className="w-full border border-border rounded-lg px-2 py-2 text-sm text-center focus:outline-none focus:border-[#1E2D24]"
                       placeholder="₡0"
                     />
