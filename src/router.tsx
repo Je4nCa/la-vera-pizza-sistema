@@ -12,6 +12,8 @@ import CierreCaja     from '@/pages/CierreCaja'
 import Ordenes        from '@/pages/Ordenes'
 import PantallaCocina from '@/pages/PantallaCocina'
 import FacturaPrint    from '@/pages/FacturaPrint'
+import Fotos           from '@/pages/Fotos'
+import PantallaFotos   from '@/pages/PantallaFotos'
 import SelectorCajero  from '@/pages/SelectorCajero'
 import { useCajeroStore } from '@/store'
 
@@ -33,6 +35,8 @@ export default function Router() {
         <Route path="pantalla-cocina" element={<PantallaCocina />} />
         {/* Impresión de factura: ventana aparte, sin sidebar/topbar, sin pedir cajero */}
         <Route path="factura/:id" element={<FacturaPrint />} />
+        {/* Pantalla de fotos: fullscreen para el TV, sin sidebar ni cajero */}
+        <Route path="pantalla-fotos" element={<PantallaFotos />} />
 
         <Route element={<RequireCajero />}>
           <Route element={<Layout />}>
@@ -40,6 +44,7 @@ export default function Router() {
             <Route path="nueva-venta"   element={<NuevaVenta />} />
             <Route path="mesas"         element={<Mesas />} />
             <Route path="ordenes"       element={<Ordenes />} />
+            <Route path="fotos"         element={<Fotos />} />
             <Route path="historial"     element={<Historial />} />
             <Route path="catalogo"      element={<Catalogo />} />
             <Route path="clientes"      element={<Clientes />} />

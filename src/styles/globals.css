@@ -110,6 +110,17 @@
 }
 .animate-fade-in-up { animation: fadeInUp 0.22s ease; }
 
+/* Zoom lento (Ken Burns) de la pantalla de fotos — da sensación de
+   movimiento sin distraer. Solo se aplica a la foto visible, así que
+   la animación se reinicia sola en cada cambio. */
+@keyframes laveraKenBurns {
+  from { transform: scale(1); }
+  to   { transform: scale(1.07); }
+}
+.animate-lavera-kenburns {
+  animation: laveraKenBurns 9s ease-out forwards;
+}
+
 /* Ticker de la pantalla de cocina */
 @keyframes laveraTicker {
   from { transform: translateX(100vw); }

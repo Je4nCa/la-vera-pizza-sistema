@@ -140,6 +140,27 @@ export interface Orden {
   esPrueba?:     boolean       // true = generada por el botón de datos de prueba
 }
 
+// ─── Pantalla de fotos ────────────────────────────────────────────────────────
+/**
+ * Metadatos + miniatura. Es lo único que carga la pantalla de administración,
+ * para que abrirla desde el celular no baje las fotos en alta resolución.
+ */
+export interface FotoPantalla {
+  id:       ID
+  nombre:   string       // nombre del archivo original, para reconocerla
+  thumb:    string       // data URL de la miniatura (~20-40 KB)
+  orden:    number       // posición en la secuencia
+  activa:   boolean
+  peso:     number       // bytes de la imagen completa, informativo
+  creadoEn: string
+}
+
+/** La imagen completa, en su propio documento (mismo id que FotoPantalla). */
+export interface FotoPantallaData {
+  id:      ID
+  dataUrl: string        // data URL de la imagen comprimida
+}
+
 // ─── Turno / Cierre de caja ───────────────────────────────────────────────────
 export type EstadoTurno = 'abierto' | 'cerrado'
 
