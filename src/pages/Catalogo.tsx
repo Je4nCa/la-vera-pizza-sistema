@@ -1,3 +1,6 @@
+/**
+ * Product catalog: create and edit products with per-size prices, categories and active state.
+ */
 import { useState } from 'react'
 import { nanoid } from 'nanoid'
 import { useCollection } from '@/hooks/useCollection'

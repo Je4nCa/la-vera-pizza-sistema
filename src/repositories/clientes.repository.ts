@@ -1,3 +1,6 @@
+/**
+ * Customers repository (Firestore).
+ */
 import { BaseRepository } from './base.repository'
 import type { Cliente } from '@/types'
 

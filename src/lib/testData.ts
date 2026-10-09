@@ -1,3 +1,6 @@
+/**
+ * Generates and removes sample sales so dashboards and reports can be demoed safely.
+ */
 import { nanoid } from 'nanoid'
 import { productosRepository, ventasRepository, ordenesRepository } from '@/repositories'
 import { calcularTotales } from '@/store'

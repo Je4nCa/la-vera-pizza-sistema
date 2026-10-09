@@ -1,3 +1,6 @@
+/**
+ * Route table. Every POS page requires an active cashier; the kitchen and photo screens are standalone.
+ */
 import { HashRouter, Routes, Route, Outlet } from 'react-router-dom'
 import Layout from '@/components/Layout'
 import Dashboard      from '@/pages/Dashboard'

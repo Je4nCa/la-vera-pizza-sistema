@@ -1,3 +1,6 @@
+/**
+ * Photo manager for the customer-facing screen: upload, reorder, toggle and remove images.
+ */
 import { useMemo, useRef, useState } from 'react'
 import { nanoid } from 'nanoid'
 import { useCollection } from '@/hooks/useCollection'

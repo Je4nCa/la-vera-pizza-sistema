@@ -1,3 +1,7 @@
+/**
+ * Firebase initialization (App, Firestore, Auth, Google provider) and helpers that scope every
+ * collection and document to the restaurant's household id.
+ */
 import { initializeApp } from 'firebase/app'
 import { getFirestore, enableNetwork, collection, doc } from 'firebase/firestore'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'

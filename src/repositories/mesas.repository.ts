@@ -1,3 +1,6 @@
+/**
+ * Tables repository (Firestore).
+ */
 import { BaseRepository } from './base.repository'
 import type { Mesa } from '@/types'
 

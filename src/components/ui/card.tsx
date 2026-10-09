@@ -1,3 +1,6 @@
+/**
+ * Card layout primitives used across dashboards and reports.
+ */
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 

@@ -1,3 +1,6 @@
+/**
+ * Printable receipts: customer ticket and kitchen ticket formatted for thermal printers.
+ */
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useCollection } from '@/hooks/useCollection'

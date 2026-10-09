@@ -1,3 +1,6 @@
+/**
+ * Kitchen display: live order queue with adaptive density, timers and a sound alert on new orders.
+ */
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { Volume2, VolumeX } from 'lucide-react'
 import { useCollection } from '@/hooks/useCollection'

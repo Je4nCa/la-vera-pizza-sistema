@@ -1,3 +1,6 @@
+/**
+ * Business configuration repository (single settings document).
+ */
 import { BaseRepository } from './base.repository'
 import type { ConfigNegocio } from '@/types'
 

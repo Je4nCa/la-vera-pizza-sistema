@@ -1,3 +1,6 @@
+/**
+ * Reports by date range and cashier: revenue, payment mix, product ranking and charts.
+ */
 import { useState, useMemo } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { useCollection } from '@/hooks/useCollection'

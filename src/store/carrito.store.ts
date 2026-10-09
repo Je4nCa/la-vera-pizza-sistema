@@ -1,3 +1,6 @@
+/**
+ * Shopping cart (Zustand, persisted): items, discounts, customer, table and the totals calculation.
+ */
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { ItemVenta, MetodoPago } from '@/types'

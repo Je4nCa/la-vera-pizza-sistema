@@ -1,3 +1,6 @@
+/**
+ * Order board: move orders through received → preparing → in the oven → delivered.
+ */
 import { useEffect, useMemo, useState } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'

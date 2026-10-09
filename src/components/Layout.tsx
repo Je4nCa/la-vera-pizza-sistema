@@ -1,3 +1,6 @@
+/**
+ * Main POS layout: sidebar, page title per route, toast container and the routed page.
+ */
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, Plus, Sun, Moon } from 'lucide-react'
 import Sidebar from './Sidebar'

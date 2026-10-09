@@ -1,3 +1,6 @@
+/**
+ * Owner dashboard: today's sales, revenue, VAT, monthly total, sales by hour, top products and per-cashier stats.
+ */
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertTriangle, LayoutGrid, UserCircle2 } from 'lucide-react'

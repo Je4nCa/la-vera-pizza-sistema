@@ -1,3 +1,7 @@
+/**
+ * Root component: Google sign-in gate, email allow-list, first-run Firestore seeding
+ * and the router once the user is authorized.
+ */
 import { useEffect, useState } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'

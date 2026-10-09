@@ -1,3 +1,6 @@
+/**
+ * Sales repository (Firestore).
+ */
 import { BaseRepository } from './base.repository'
 import type { Venta } from '@/types'
 

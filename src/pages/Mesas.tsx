@@ -1,3 +1,6 @@
+/**
+ * Table management: occupy, release and see how long each table has been in use.
+ */
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCollection } from '@/hooks/useCollection'

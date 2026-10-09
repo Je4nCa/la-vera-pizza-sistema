@@ -1,3 +1,9 @@
+/**
+ * New sale — the heart of the POS.
+ * Size selection, half-and-half pizzas (charged at the pricier flavor), discounts, customer
+ * assignment, split bills and payment by cash, card or SINPE Móvil. Creates the sale and
+ * sends the order to the kitchen display.
+ */
 import { useState, useEffect, useCallback } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'

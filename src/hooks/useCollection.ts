@@ -1,3 +1,6 @@
+/**
+ * Generic real-time Firestore collection hook: subscribes to a query and returns typed docs + loading state.
+ */
 import { useState, useEffect, useRef } from 'react'
 import { onSnapshot, type Query, type CollectionReference } from 'firebase/firestore'
 

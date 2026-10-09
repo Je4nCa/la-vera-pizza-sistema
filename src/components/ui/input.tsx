@@ -1,3 +1,6 @@
+/**
+ * Text input primitive styled with the La Vera Pizza theme.
+ */
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 

@@ -1,3 +1,6 @@
+/**
+ * Kitchen orders repository (Firestore).
+ */
 import { BaseRepository } from './base.repository'
 import type { Orden } from '@/types'
 

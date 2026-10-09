@@ -1,3 +1,6 @@
+/**
+ * Products repository (Firestore).
+ */
 import { BaseRepository } from './base.repository'
 import type { Producto } from '@/types'
 

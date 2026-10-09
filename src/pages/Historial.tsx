@@ -1,3 +1,6 @@
+/**
+ * Sales history with search, payment filters, pagination, reprint and void.
+ */
 import { useState, useMemo } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'

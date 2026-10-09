@@ -1,3 +1,6 @@
+/**
+ * Navigation sidebar: POS sections, active cashier and sign-out.
+ */
 import { NavLink, useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'

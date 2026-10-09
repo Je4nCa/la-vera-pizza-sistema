@@ -1,3 +1,6 @@
+/**
+ * Registers the Chart.js components used by the dashboard and reports.
+ */
 import {
   Chart as ChartJS,
   CategoryScale,

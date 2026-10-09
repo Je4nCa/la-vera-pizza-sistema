@@ -1,3 +1,6 @@
+/**
+ * Cash-register closing: per-shift totals by payment method, ready to print.
+ */
 import { useMemo } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'

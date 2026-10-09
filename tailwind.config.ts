@@ -1,3 +1,6 @@
+/**
+ * Tailwind theme: La Vera Pizza colors and fonts (Montserrat, Playfair Display).
+ */
 import type { Config } from 'tailwindcss'
 
 const config: Config = {

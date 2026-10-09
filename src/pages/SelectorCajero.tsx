@@ -1,3 +1,6 @@
+/**
+ * Cashier picker shown at the start of a shift ("Who's on today?").
+ */
 import { useEffect, useRef } from 'react'
 import { useCollection } from '@/hooks/useCollection'
 import { hCol } from '@/lib/firebase'

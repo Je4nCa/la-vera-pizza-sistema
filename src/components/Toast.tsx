@@ -1,3 +1,6 @@
+/**
+ * Toast notifications rendered from the global UI store.
+ */
 import { useUIStore } from '@/store'
 import { cn } from '@/lib/utils'
 

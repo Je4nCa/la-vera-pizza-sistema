@@ -1,3 +1,6 @@
+/**
+ * Barrel file for all Firestore repositories.
+ */
 export { productosRepository } from './productos.repository'
 export { cajerosRepository }  from './cajeros.repository'
 export { ventasRepository }    from './ventas.repository'

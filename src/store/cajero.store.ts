@@ -1,3 +1,6 @@
+/**
+ * Active cashier for the current shift (Zustand, persisted).
+ */
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { Cajero } from '@/types'

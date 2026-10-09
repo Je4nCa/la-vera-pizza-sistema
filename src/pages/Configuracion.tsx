@@ -1,3 +1,6 @@
+/**
+ * Settings: business info, taxes, tables, cashiers, order numbering and demo-data tools.
+ */
 import { useState, useEffect } from 'react'
 import { nanoid } from 'nanoid'
 import { useCollection } from '@/hooks/useCollection'

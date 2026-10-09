@@ -1,3 +1,6 @@
+/**
+ * Customer directory with search, create, edit and delete.
+ */
 import { useState } from 'react'
 import { nanoid } from 'nanoid'
 import { useCollection } from '@/hooks/useCollection'
